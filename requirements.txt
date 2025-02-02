@@ -5,4 +5,7 @@ pymysql==1.0.2
 python-dotenv==0.19.0
 pydantic==1.8.2
 mangum==0.17.0
-cryptography 
+cryptography
+jinja2==3.1.2
+aiofiles==23.1.0
+passlib[bcrypt]==1.7.4 

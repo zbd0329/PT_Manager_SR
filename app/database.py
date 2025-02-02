@@ -1,6 +1,6 @@
 import os
 from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker, DeclarativeBase
+from sqlalchemy.orm import sessionmaker, declarative_base
 from dotenv import load_dotenv
 import logging
 
@@ -34,8 +34,7 @@ engine = create_engine(
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 # Base 클래스 생성
-class Base(DeclarativeBase):
-    pass
+Base = declarative_base()
 
 # DB 세션 핸들러
 def get_db():
