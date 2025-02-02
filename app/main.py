@@ -23,7 +23,7 @@ AppBase.metadata.create_all(bind=engine)
 # 라우터 등록
 app.include_router(user.router)
 
-# 정적 파일 설정
+# 정적 파일 설정 (상대 경로 사용)
 app.mount("/static", StaticFiles(directory="app/static"), name="static")
 
 # 템플릿 설정
