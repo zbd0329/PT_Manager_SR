@@ -1,0 +1,23 @@
+.card {
+    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    border-radius: 10px;
+}
+
+.card-header {
+    background-color: #f8f9fa;
+    border-bottom: none;
+    padding: 20px;
+}
+
+.card-body {
+    padding: 30px;
+}
+
+.form-label {
+    font-weight: 500;
+}
+
+.btn-primary {
+    padding: 10px;
+    font-weight: 500;
+} 
