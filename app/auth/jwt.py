@@ -1,11 +1,19 @@
 from datetime import datetime, timedelta
 from jose import JWTError, jwt
 from typing import Optional
+import os
+from dotenv import load_dotenv
+
+# 환경 변수 로드
+load_dotenv()
 
 # JWT 설정
-SECRET_KEY = "your-secret-key-here"  # 실제 운영환경에서는 환경변수로 관리
-ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 30
+SECRET_KEY = os.getenv("JWT_SECRET_KEY")
+ALGORITHM = os.getenv("JWT_ALGORITHM", "HS256")
+ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("JWT_ACCESS_TOKEN_EXPIRE_MINUTES", "30"))
+
+if not SECRET_KEY:
+    raise ValueError("JWT_SECRET_KEY must be set in environment variables")
 
 def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
     to_encode = data.copy()
