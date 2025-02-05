@@ -1,4 +1,4 @@
-from pydantic import BaseModel, validator
+from pydantic import BaseModel, validator, Field
 from typing import Optional
 from datetime import datetime
 from app.models.member_model import GenderEnum
@@ -53,3 +53,7 @@ class MemberUpdate(BaseModel):
             if not all(c.isdigit() or c == '-' for c in v):
                 raise ValueError('연락처는 숫자와 하이픈(-)만 포함할 수 있습니다')
         return v
+
+class MemberLogin(BaseModel):
+    login_id: str = Field(..., description="로그인 ID")
+    password: str = Field(..., description="비밀번호")

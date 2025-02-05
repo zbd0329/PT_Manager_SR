@@ -1,4 +1,4 @@
-from pydantic import BaseModel, EmailStr, validator
+from pydantic import BaseModel, EmailStr, validator, Field
 from datetime import date
 from app.models.user_model import UserType
 import uuid
@@ -24,8 +24,8 @@ class UserCreate(BaseModel):
         return v
 
 class UserLogin(BaseModel):
-    login_id: str
-    password: str
+    login_id: str = Field(..., description="로그인 ID")
+    password: str = Field(..., description="비밀번호")
     user_type: str
 
 class UserResponse(BaseModel):

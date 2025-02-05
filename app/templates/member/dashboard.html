@@ -9,55 +9,65 @@
 </head>
 <body>
     <script>
-        // 페이지 로드 시 로그인 상태 확인 및 대시보드 데이터 로드
+        // 페이지 로드 시 인증 체크 및 사용자 정보 표시
         window.onload = async function() {
-            const token = localStorage.getItem('access_token');
-            if (!token) {
-                // 토큰이 없으면 로그인 페이지로 리다이렉트
-                window.location.href = '/';
-                return;
-            }
-
             try {
-                // 토큰 유효성 검증
                 const response = await fetch('/api/member/verify-auth', {
-                    headers: {
-                        'Authorization': `Bearer ${token}`
-                    }
+                    credentials: 'include'  // 쿠키를 포함하여 요청
                 });
 
                 if (!response.ok) {
-                    // 토큰이 유효하지 않거나 만료된 경우
-                    if (response.status === 401) {
-                        localStorage.removeItem('access_token');
-                        localStorage.removeItem('userName');
-                        localStorage.removeItem('userType');
-                        await Swal.fire({
-                            icon: 'error',
-                            title: '인증 실패',
-                            text: '로그인이 필요합니다.',
-                            confirmButtonText: '확인'
-                        });
-                        window.location.href = '/';
-                        return;
-                    }
+                    throw new Error('Authentication failed');
+                }
+
+                const data = await response.json();
+                console.log('Auth verification response:', data);
+
+                // 사용자 타입 확인 (대소문자 구분 없이)
+                const userType = data.user_data.user_type.toUpperCase();
+                if (userType !== 'MEMBER') {
+                    throw new Error('Unauthorized access');
                 }
 
                 // 사용자 이름 표시
-                const userName = localStorage.getItem('userName');
+                const userName = localStorage.getItem('user_name');
                 if (userName) {
-                    document.getElementById('welcomeMessage').textContent = 
-                        `${userName} 님 접속을 환영합니다.`;
+                    document.getElementById('welcomeMessage').textContent = `${userName} 회원님 환영합니다.`;
                 }
+
             } catch (error) {
-                console.error('Error:', error);
+                console.error('Authentication error:', error);
+                // localStorage 정리
+                localStorage.clear();
                 await Swal.fire({
                     icon: 'error',
-                    title: '오류',
-                    text: '페이지 로드 중 오류가 발생했습니다.',
+                    title: '인증 오류',
+                    text: '로그인이 필요합니다.',
                     confirmButtonText: '확인'
                 });
                 window.location.href = '/';
+            }
+        };
+
+        // 로그아웃 처리
+        async function handleLogout() {
+            try {
+                // localStorage 정리
+                localStorage.clear();
+                
+                // 쿠키 삭제를 위해 만료시간을 과거로 설정
+                document.cookie = 'access_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+
+                // 로그인 페이지로 리다이렉트
+                window.location.href = '/';
+            } catch (error) {
+                console.error('Logout error:', error);
+                await Swal.fire({
+                    icon: 'error',
+                    title: '로그아웃 실패',
+                    text: '로그아웃 처리 중 오류가 발생했습니다.',
+                    confirmButtonText: '확인'
+                });
             }
         }
     </script>
@@ -68,7 +78,7 @@
                 <div class="card">
                     <div class="card-header d-flex justify-content-between align-items-center">
                         <h3 class="mb-0">회원 대시보드</h3>
-                        <button onclick="logout()" class="btn btn-outline-danger">로그아웃</button>
+                        <button onclick="handleLogout()" class="btn btn-outline-danger">로그아웃</button>
                     </div>
                     <div class="card-body">
                         <h4 class="text-center mb-4">
@@ -82,36 +92,5 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <script>
-        // 로그아웃 함수
-        async function logout() {
-            await Swal.fire({
-                title: '로그아웃',
-                text: '로그아웃 하시겠습니까?',
-                icon: 'question',
-                showCancelButton: true,
-                confirmButtonText: '예',
-                cancelButtonText: '아니오'
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    // localStorage에서 모든 인증 관련 정보 삭제
-                    localStorage.removeItem('access_token');
-                    localStorage.removeItem('userName');
-                    localStorage.removeItem('userType');
-                    
-                    // 로그아웃 성공 메시지
-                    Swal.fire({
-                        title: '로그아웃 완료',
-                        text: '로그아웃되었습니다.',
-                        icon: 'success',
-                        confirmButtonText: '확인'
-                    }).then(() => {
-                        // 로그인 페이지로 리다이렉트
-                        window.location.href = '/';
-                    });
-                }
-            });
-        }
-    </script>
 </body>
 </html> 

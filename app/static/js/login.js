@@ -1,90 +1,83 @@
-document.getElementById('loginForm').addEventListener('submit', async (e) => {
+document.getElementById('loginForm').addEventListener('submit', async function(e) {
     e.preventDefault();
 
     const userType = document.querySelector('input[name="user_type"]:checked').value;
-    const loginId = document.getElementById('loginId').value;
-    console.log('Login attempt:', { login_id: loginId, type: userType }); // 디버깅용 로그
-
-    const loginData = {
-        login_id: loginId,
+    const formData = {
+        login_id: document.getElementById('loginId').value,
         password: document.getElementById('userPassword').value,
         user_type: userType
     };
 
-    const API_URL = '/api/v1/users/login';
-    console.log('Sending request to:', API_URL); // 디버깅용 로그
-    console.log('Login data:', loginData); // 디버깅용 로그
+    console.log('로그인 시도:', { 
+        login_id: formData.login_id, 
+        user_type: userType 
+    });
 
     try {
-        const response = await fetch(API_URL, {
+        // 사용자 유형에 따라 다른 엔드포인트 사용
+        const endpoint = userType === 'trainer' 
+            ? '/api/v1/users/login' 
+            : '/api/v1/members/login';
+            
+        console.log('로그인 요청 엔드포인트:', endpoint);
+
+        const response = await fetch(endpoint, {
             method: 'POST',
             headers: {
-                'Content-Type': 'application/json',
-                'Accept': 'application/json'
+                'Content-Type': 'application/json'
             },
-            body: JSON.stringify(loginData)
+            body: JSON.stringify(formData),
+            credentials: 'include'  // 쿠키를 포함하도록 설정
         });
 
-        console.log('Response status:', response.status); // 디버깅용 로그
-
-        let data;
-        try {
-            const textData = await response.text();
-            console.log('Raw response:', textData); // 디버깅용 로그
-            data = textData ? JSON.parse(textData) : {};
-        } catch (e) {
-            console.error('JSON parsing error:', e);
-            data = {};
-        }
+        const data = await response.json();
+        console.log('서버 응답:', data);
 
         if (response.ok) {
-            // JWT 토큰과 사용자 정보 저장
-            localStorage.setItem('access_token', data.access_token);
-            localStorage.setItem('userName', data.user_name);
-            localStorage.setItem('userType', data.user_type);
-            
-            await Swal.fire({
-                icon: 'success',
-                title: '로그인 성공!',
-                text: '로그인하였습니다.',
-                confirmButtonText: '확인'
+            // 로그인 성공
+            localStorage.setItem('user_name', data.user_name);
+            localStorage.setItem('user_type', data.user_type);
+
+            console.log('저장된 사용자 정보:', {
+                user_type: data.user_type,
+                user_name: data.user_name
             });
 
-            // 사용자 유형에 따라 다른 대시보드로 리다이렉트
-            if (data.user_type === 'trainer') {
+            // 사용자 유형에 따라 리다이렉트
+            const userType = data.user_type.toLowerCase();
+            console.log('리다이렉트 결정을 위한 사용자 유형:', userType);
+
+            if (userType === 'trainer') {
+                console.log('트레이너 대시보드로 이동');
                 window.location.href = '/trainer/dashboard';
-            } else {
+            } else if (userType === 'member') {
+                console.log('회원 대시보드로 이동');
                 window.location.href = '/member/dashboard';
+            } else {
+                console.error('알 수 없는 사용자 유형:', userType);
+                await Swal.fire({
+                    icon: 'error',
+                    title: '오류 발생',
+                    text: '알 수 없는 사용자 유형입니다.',
+                    confirmButtonText: '확인'
+                });
             }
         } else {
-            let errorMessage = '로그인 중 오류가 발생했습니다.';
-            
-            if (response.status === 401) {
-                errorMessage = '아이디, 비밀번호 또는 사용자 유형이 올바르지 않습니다.';
-            } else if (response.status === 404) {
-                errorMessage = '로그인 서비스를 찾을 수 없습니다. 잠시 후 다시 시도해주세요.';
-            } else if (data.detail) {
-                errorMessage = data.detail;
-            }
-
-            console.error('Login failed:', {
-                status: response.status,
-                data: data
-            });
-
+            // 로그인 실패
+            console.error('로그인 실패:', data);
             await Swal.fire({
                 icon: 'error',
                 title: '로그인 실패',
-                text: errorMessage,
+                text: data.detail || '로그인에 실패했습니다.',
                 confirmButtonText: '확인'
             });
         }
     } catch (error) {
-        console.error('Network error:', error);
+        console.error('로그인 오류:', error);
         await Swal.fire({
             icon: 'error',
             title: '서버 오류',
-            text: '서버 연결 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.',
+            text: '서버와의 통신 중 오류가 발생했습니다.',
             confirmButtonText: '확인'
         });
     }
