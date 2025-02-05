@@ -29,7 +29,7 @@ end
 # Unset irrelevant variables.
 deactivate nondestructive
 
-set -gx VIRTUAL_ENV "/Users/isala/Library/CloudStorage/OneDrive-개인/PT_Tracker/venv"
+set -gx VIRTUAL_ENV "/Users/isala/Library/CloudStorage/OneDrive-개인/PT_Manager_SR/venv"
 
 set -gx _OLD_VIRTUAL_PATH $PATH
 set -gx PATH "$VIRTUAL_ENV/bin" $PATH
