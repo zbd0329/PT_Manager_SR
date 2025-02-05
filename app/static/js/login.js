@@ -2,11 +2,11 @@ document.getElementById('loginForm').addEventListener('submit', async (e) => {
     e.preventDefault();
 
     const userType = document.querySelector('input[name="user_type"]:checked').value;
-    const userEmail = document.getElementById('userEmail').value;
-    console.log('Login attempt:', { email: userEmail, type: userType }); // 디버깅용 로그
+    const loginId = document.getElementById('loginId').value;
+    console.log('Login attempt:', { login_id: loginId, type: userType }); // 디버깅용 로그
 
     const loginData = {
-        email: userEmail,
+        login_id: loginId,
         password: document.getElementById('userPassword').value,
         user_type: userType
     };
@@ -60,7 +60,7 @@ document.getElementById('loginForm').addEventListener('submit', async (e) => {
             let errorMessage = '로그인 중 오류가 발생했습니다.';
             
             if (response.status === 401) {
-                errorMessage = '이메일, 비밀번호 또는 사용자 유형이 올바르지 않습니다.';
+                errorMessage = '아이디, 비밀번호 또는 사용자 유형이 올바르지 않습니다.';
             } else if (response.status === 404) {
                 errorMessage = '로그인 서비스를 찾을 수 없습니다. 잠시 후 다시 시도해주세요.';
             } else if (data.detail) {

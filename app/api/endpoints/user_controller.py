@@ -5,6 +5,7 @@ from app.services.user_service import UserService
 from app.core.database import get_db
 from app.core.security import create_access_token
 from typing import List
+import logging
 
 router = APIRouter(
     prefix="/api/v1/users",
@@ -24,15 +25,31 @@ async def create_user(user: UserCreate, db: Session = Depends(get_db)):
         생성된 사용자 정보
         
     Raises:
-        400: 이미 존재하는 이메일
+        400: 이미 존재하는 아이디 또는 이메일
     """
-    db_user = await UserService.get_user_by_email(user.email, db)
-    if db_user:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Email already registered"
-        )
-    return await UserService.create_user(user, db)
+    try:
+        # 아이디 중복 체크
+        existing_user = await UserService.get_user_by_login_id(user.login_id, db)
+        if existing_user:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Login ID already registered"
+            )
+        
+        # 이메일이 제공된 경우 중복 체크
+        if user.email:
+            existing_email = await UserService.get_user_by_email(user.email, db)
+            if existing_email:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="Email already registered"
+                )
+        
+        print(f"Creating user with data: {user.dict()}")  # 디버그 로그
+        return await UserService.create_user(user, db)
+    except Exception as e:
+        print(f"Error creating user: {str(e)}")  # 디버그 로그
+        raise
 
 @router.post("/login")
 async def login(user_data: UserLogin, db: Session = Depends(get_db)):
@@ -49,26 +66,26 @@ async def login(user_data: UserLogin, db: Session = Depends(get_db)):
     Raises:
         401: 잘못된 인증 정보
     """
-    print(f"Login attempt - Email: {user_data.email}, Type: {user_data.user_type}")  # 디버그 로그
+    print(f"Login attempt - Login ID: {user_data.login_id}, Type: {user_data.user_type}")  # 디버그 로그
     
-    # 데이터베이스에서 사용자 조회
-    db_user = await UserService.get_user_by_email(user_data.email, db)
-    if db_user:
-        print(f"Found user - Email: {db_user.email}, Type: {db_user.user_type}")  # 디버그 로그
-    
-    user = await UserService.authenticate_user(user_data.email, user_data.password, user_data.user_type, db)
+    user = await UserService.authenticate_user(user_data.login_id, user_data.password, user_data.user_type, db)
     if not user:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Incorrect email, password or user type"
+            detail="Incorrect login ID, password or user type"
         )
     
-    # Enum 값을 문자열로 변환
-    access_token = create_access_token(data={"sub": user.email, "user_type": user.user_type.value})
+    access_token = create_access_token(
+        data={
+            "sub": str(user.id),
+            "user_type": user.user_type.value,
+            "login_id": user.login_id
+        }
+    )
     
     return {
         "access_token": access_token,
         "token_type": "bearer",
         "user_name": user.name,
         "user_type": user.user_type.value
-    } 
+    }

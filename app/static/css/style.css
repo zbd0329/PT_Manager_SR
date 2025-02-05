@@ -84,3 +84,7 @@ html, body {
     background-color: #5c636a;
     border-color: #565e64;
 } 
+
+.min-width-400 {
+    min-width: 400px;
+}
