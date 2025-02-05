@@ -1,0 +1,189 @@
+이 파일을 읽을때는 마크다운 형식으로 읽어주세요.
+
+# FastAPI 프로젝트 구조 설정 
+app/
+├── api/
+│   ├── endpoints/      # API 라우터
+│   └── dependencies/   # 의존성 주입 관련 모듈
+├── core/
+│   ├── config.py      # 환경 설정
+│   ├── security.py    # 보안 관련
+│   └── exceptions.py  # 커스텀 예외 처리
+├── db/                # 데이터베이스 관련
+│   ├── session.py     # DB 세션 관리
+│   └── base.py       # Base 모델
+├── models/           # SQLAlchemy 모델
+├── schemas/          # Pydantic 모델
+├── services/         # 비즈니스 로직
+├── repositories/     # DB 쿼리 로직
+├── tests/
+│   ├── conftest.py   # pytest 설정
+│   └── api/
+├── utils/
+└── main.py
+
+
+# FastAPI 함수명 및 파일명 규칙
+
+- 파일명은 모두 소문자와 언더스코어를 사용합니다. (ex. money_distributor_controller.py)
+- 함수명은 소문자와 언더스코어를 사용하여 작성합니다. (ex. get_user_info)
+- 어떤 기능인지 알 수 있도록 함수명을 작성합니다. (ex. get_user_info)
+- 최대한 쉬운 단어를 사용하여 함수명을 작성합니다. (ex. get_user_info)
+- 비슷한 기능이 이미 있는 경우 구분할 수 있도록 함수명을 작성합니다.(ex. 회원이 운동기록을 조회할 때 get_member_exercise_history,트레이너가 운동기록을 조회할 때 get_trainer_training_history)
+- 기능이 비슷한 경우 같은 파일에 작성합니다.(ex. 회원 관련 - 회원가입, 회원정보수정, 회원탈퇴 등)
+
+## 예시코드
+### money_distributor_controller.py
+@router.post("/spread")
+async def create_spread():
+    return await money_service.process_distribution()
+
+### money_distributor_service.py
+async def process_distribution():
+    token = generate_unique_token()
+    return await money_repository.save_distribution(token)
+
+### money_distributor_repository.py
+async def save_distribution(token: str):
+    return await db.execute(query)
+
+# 사용할 기술스택
+## 1. Redis
+- 토큰의 유효기간(10분) 관리
+- 동시성 제어를 위한 분산 락 구현
+- 캐싱을 통한 성능 최적화
+
+## 2. Docker
+- 개발/배포 환경 일관성
+- 멀티 컨테이너 구성 (FastAPI, MySQL, Redis)
+
+## 3.JWT
+- API 인증/인가 구현
+- 헤더를 통한 사용자/룸 식별 보안 강화
+
+## 4.Alembic
+- 데이터베이스 마이그레이션 관리
+- 스키마 버전 관리
+
+# 기술스택 관련 추가 설정
+## 1. Redis 설정
+- 키 네이밍 규칙 추가: 
+  예: "spread:{token}:lock", "spread:{token}:info"
+- TTL 설정 규칙:
+  - 토큰 유효기간: 600초 (10분)
+  - 캐시 데이터: 3600초 (1시간)
+
+## 2. Docker 관련
+- 컨테이너 명명 규칙: 
+  {프로젝트명}-{서비스}-{환경}
+  예: "money-api-dev", "money-redis-dev"
+
+## 3. JWT 설정
+- 토큰 만료 시간: Access Token (30분)
+- 페이로드 구조 정의
+  {
+    "user_id": int,
+    "room_id": str,
+    "exp": int
+  }
+
+
+# 명령어 알려줄때 mac 명령어 사용
+- pip대신 pip3 사용
+- ubuntu 명령어 사용
+
+# 개발 환경 설정 명령어
+## 1.가상환경 생성
+python3 -m venv venv
+source venv/bin/activate
+
+## 2.의존성 설치
+pip3 install fastapi uvicorn[standard] sqlalchemy alembic redis python-jose[cryptography] passlib[bcrypt] python-multipart
+
+## 3.Docker 관련
+docker-compose up -d
+docker-compose ps
+docker-compose logs -f
+
+## 4.Alembic 명령어
+alembic init alembic
+alembic revision --autogenerate -m "description"
+alembic upgrade head
+
+
+# API 응답 형식 표준화
+class ResponseModel:
+    success: bool
+    message: str
+    data: Optional[Any]
+    error: Optional[str]
+
+# API 응답 형식 표준화
+pythonCopyclass ResponseModel:
+    success: bool
+    message: str
+    data: Optional[Any]
+    error: Optional[str]
+
+# Swagger 문서화 규칙
+## 1. API 기본 설정
+pythonCopyapp = FastAPI(
+    title="Money Distribution API",
+    description="돈 뿌리기 서비스 API 문서",
+    version="1.0.0",
+    docs_url="/docs",
+    redoc_url="/redoc"
+)
+## 2. 엔드포인트 문서화
+pythonCopy@router.post("/spread", response_model=ResponseModel)
+async def create_spread(
+    amount: int = Query(..., description="뿌릴 금액", gt=0),
+    count: int = Query(..., description="뿌릴 인원 수", gt=0),
+    user_id: int = Header(..., alias="X-USER-ID", description="사용자 ID"),
+    room_id: str = Header(..., alias="X-ROOM-ID", description="대화방 ID")
+):
+    """
+    돈 뿌리기를 생성합니다.
+
+    Returns:
+        token: 3자리 문자열 토큰
+    
+    Raises:
+        400: 잘못된 요청
+        401: 인증 실패
+    """
+## 3. 응답 모델 문서화
+pythonCopyclass SpreadResponse(BaseModel):
+    token: str = Field(..., description="생성된 토큰", example="abc")
+    created_at: datetime = Field(..., description="생성 시각")
+    
+    class Config:
+        schema_extra = {
+            "example": {
+                "token": "abc",
+                "created_at": "2024-02-03T12:00:00"
+            }
+        }
+## 4. 에러 응답 문서화
+pythonCopy@router.post(
+    "/spread",
+    responses={
+        200: {
+            "description": "성공적으로 돈 뿌리기 생성",
+            "model": ResponseModel
+        },
+        400: {
+            "description": "잘못된 요청",
+            "model": ErrorResponse
+        },
+        401: {
+            "description": "인증 실패",
+            "model": ErrorResponse
+        }
+    }
+)
+## 5. 태그 분류
+pythonCopyrouter = APIRouter(
+    prefix="/api/v1",
+    tags=["돈 뿌리기"]
+)

@@ -3,25 +3,33 @@ import sys
 import os
 
 from fastapi import FastAPI, Request, HTTPException, Depends
-from .database import engine, Base
+from app.core.database import engine, Base
 # from mangum import Mangum #Vercel 배포 하기위한 임포트
 from sqlalchemy import text
-from .routers import user
+from app.api.endpoints import user_router
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from pathlib import Path
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
-from .auth.jwt import verify_token
+from app.core.config import settings
+from app.core.security import verify_token
 
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
-app = FastAPI(title="PTTracker")
+app = FastAPI(
+    title=settings.PROJECT_NAME,
+    version=settings.VERSION
+)
 
-# 데이터베이스 테이블 생성
+# 데이터베이스 테이블 초기화
+print("Dropping all tables...")  # 디버그 로그
+AppBase.metadata.drop_all(bind=engine)
+print("Creating all tables...")  # 디버그 로그
 AppBase.metadata.create_all(bind=engine)
+print("Database initialization completed!")  # 디버그 로그
 
 # 라우터 등록
-app.include_router(user.router)
+app.include_router(user_router)
 
 # 정적 파일 설정 (상대 경로 사용)
 app.mount("/static", StaticFiles(directory="app/static"), name="static")
