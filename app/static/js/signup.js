@@ -2,7 +2,7 @@ document.getElementById('signupForm').addEventListener('submit', async (e) => {
     e.preventDefault();
 
     const userData = {
-        id: document.getElementById('userId').value,
+        email: document.getElementById('userEmail').value,
         password: document.getElementById('userPassword').value,
         name: document.getElementById('userName').value,
         birth_date: document.getElementById('birthDate').value,
@@ -10,7 +10,7 @@ document.getElementById('signupForm').addEventListener('submit', async (e) => {
     };
 
     try {
-        const response = await fetch('/users/signup', {
+        const response = await fetch('/api/v1/users', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
