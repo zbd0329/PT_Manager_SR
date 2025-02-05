@@ -419,9 +419,18 @@
                     try {
                         const response = await fetch('/api/v1/members', {
                             method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Accept': 'application/json'
+                            },
                             credentials: 'include',  // 쿠키를 포함하여 요청
                             body: JSON.stringify(memberData)
                         });
+
+                        // 응답 데이터를 먼저 확인
+                        console.log('서버 응답 상태:', response.status);
+                        const responseData = await response.json();
+                        console.log('서버 응답 데이터:', responseData);
 
                         if (response.ok) {
                             await Swal.fire({
