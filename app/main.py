@@ -13,7 +13,8 @@ from fastapi.templating import Jinja2Templates
 from pathlib import Path
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from app.core.config import settings
-from app.core.security import verify_token
+from app.core.security import verify_token, verify_trainer, verify_member
+from fastapi import status
 
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
@@ -73,18 +74,54 @@ async def signup_page(request: Request):
     return templates.TemplateResponse("signup.html", {"request": request})
 
 @app.get("/member/dashboard")
-async def member_dashboard(request: Request):
+async def member_dashboard(request: Request, current_user: dict = Depends(verify_member)):
     return templates.TemplateResponse("member/dashboard.html", {"request": request})
 
 @app.get("/trainer/dashboard")
-async def trainer_dashboard(request: Request):
-    return templates.TemplateResponse("trainer/dashboard.html", {"request": request})
+async def trainer_dashboard(request: Request, current_user: dict = Depends(verify_trainer)):
+    """트레이너 대시보드 페이지"""
+    print("\n=== Trainer Dashboard Access Debug ===")
+    print(f"Request cookies: {request.cookies}")
+    print(f"Current user data: {current_user}")
+    print("=== End Dashboard Debug ===\n")
+    return templates.TemplateResponse("trainer/dashboard.html", {
+        "request": request,
+        "user_name": current_user.get("name", "Unknown"),
+        "user_type": current_user.get("user_type", "Unknown")
+    })
 
 @app.get("/trainer/member-management")
-async def member_management(request: Request):
+async def member_management(request: Request, current_user: dict = Depends(verify_trainer)):
     """회원 관리 페이지를 반환합니다."""
     return templates.TemplateResponse("member-management.html", {"request": request})
 
 @app.get("/api/member/verify-auth")
-async def verify_auth(token_data: dict = Depends(verify_token_middleware)):
-    return {"status": "authenticated", "user_data": token_data}
+async def verify_auth(request: Request):
+    """토큰 유효성을 검증하는 엔드포인트"""
+    try:
+        token = request.cookies.get("access_token")
+        if not token:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="인증 토큰이 없습니다."
+            )
+            
+        # Bearer 접두사 제거
+        if token.startswith('Bearer '):
+            token = token.split(' ')[1]
+            
+        payload = verify_token(token)
+        if not payload:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="유효하지 않은 토큰입니다."
+            )
+            
+        return {"status": "authenticated", "user_data": payload}
+        
+    except Exception as e:
+        print(f"Token verification error: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="인증에 실패했습니다."
+        )

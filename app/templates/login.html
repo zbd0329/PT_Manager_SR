@@ -1,0 +1,43 @@
+        async function handleLogin(event) {
+            event.preventDefault();
+            
+            const loginId = document.getElementById('login_id').value;
+            const password = document.getElementById('password').value;
+
+            try {
+                const response = await fetch('/api/v1/users/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    credentials: 'include',  // 쿠키를 포함하여 요청
+                    body: JSON.stringify({
+                        login_id: loginId,
+                        password: password
+                    })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    // 로그인 성공 시 대시보드로 이동
+                    window.location.href = '/trainer/dashboard';
+                } else {
+                    // 로그인 실패 시 에러 메시지 표시
+                    await Swal.fire({
+                        icon: 'error',
+                        title: '로그인 실패',
+                        text: data.detail || '로그인에 실패했습니다.',
+                        confirmButtonText: '확인'
+                    });
+                }
+            } catch (error) {
+                console.error('Login error:', error);
+                await Swal.fire({
+                    icon: 'error',
+                    title: '오류',
+                    text: '로그인 처리 중 오류가 발생했습니다.',
+                    confirmButtonText: '확인'
+                });
+            }
+        } 
