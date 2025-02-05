@@ -19,3 +19,41 @@ ENV/
 # OS
 .DS_Store
 Thumbs.db 
+
+// 
+
+## Component Guidelines
+
+### ShadCN Components
+- 모든 UI 컴포넌트는 **ShadCN**을 사용해야 합니다.
+- 컴포넌트 사용 전 설치 여부를 확인해야 합니다: `/components/ui` 디렉토리 체크
+- 컴포넌트 설치 명령어를 사용해야 합니다: `npx shadcn@latest add [component-name]`
+  - ⚠ 주의: `npx shadcn-ui@latest add` 명령어는 **deprecated**. 반드시 `npx shadcn@latest add` 사용해야 합니다.
+
+### Icons
+- 모든 아이콘은 **Lucide React**를 사용해야 합니다.
+- 아이콘 임포트 방법: `import { IconName } from "lucide-react"`
+- 예시: `import { Search, Menu } from "lucide-react"`
+
+### Component Structure
+- 컴포넌트는 `/components` 디렉토리 내에 위치해야 합니다.
+- UI 컴포넌트는 `/components/ui` 디렉토리에 위치해야 합니다.
+- 페이지별 컴포넌트는 `/app` 디렉토리 내 해당 라우트에 위치해야 합니다.
+
+## TypeScript Best Practices
+- 모든 컴포넌트와 함수에는 **TypeScript 타입 정의가 필수**입니다.
+- `any` 타입 사용을 지양하고, 명확한 타입을 지정해야 합니다.
+- 공통 타입 정의는 `/types` 디렉토리에서 관리해야 합니다.
+- Props 및 State의 타입은 인터페이스 혹은 타입 별칭을 활용해야 합니다.
+  - 예시:
+    ```tsx
+    interface ButtonProps {
+      label: string;
+      onClick: () => void;
+    }
+    ```
+- API 응답 타입은 `Zod` 혹은 `TypeScript Interface`를 활용하여 검증해야 합니다.
+
+## Best Practices
+- **TypeScript** 타입은 반드시 정의해야 합니다.
+- 컴포넌트는 재사용 가능하도록 설계해야 합니다.
