@@ -1,37 +1,40 @@
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, validator
 from datetime import date
 from app.models.user_model import UserType
 import uuid
-from enum import Enum
+from typing import Optional
 
 class UserBase(BaseModel):
-    email: str
+    login_id: str
     name: str
     user_type: UserType
 
 class UserCreate(BaseModel):
-    email: EmailStr
+    login_id: str
+    email: Optional[EmailStr] = None
     name: str
-    birth_date: str  # 문자열로 받기
+    birth_date: str
     password: str
-    user_type: UserType = UserType.MEMBER  # 기본값 설정
+    user_type: UserType = UserType.MEMBER
+
+    @validator('login_id')
+    def validate_login_id(cls, v):
+        if len(v) < 4:
+            raise ValueError("Login ID must be at least 4 characters long")
+        return v
 
 class UserLogin(BaseModel):
-    email: EmailStr
+    login_id: str
     password: str
-    user_type: str  # UserType Enum 대신 문자열로 받음
-
-    @property
-    def user_type_enum(self) -> UserType:
-        """문자열로 받은 user_type을 UserType Enum으로 변환"""
-        return UserType(self.user_type)
+    user_type: str
 
 class UserResponse(BaseModel):
     id: str
-    email: EmailStr
+    login_id: str
+    email: Optional[str]
     name: str
-    birth_date: date  # date 타입으로 변경
+    birth_date: date
     user_type: UserType
 
     class Config:
-        from_attributes = True 
+        from_attributes = True

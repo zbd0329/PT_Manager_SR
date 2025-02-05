@@ -2,7 +2,8 @@ document.getElementById('signupForm').addEventListener('submit', async (e) => {
     e.preventDefault();
 
     const userData = {
-        email: document.getElementById('userEmail').value,
+        login_id: document.getElementById('loginId').value,
+        email: document.getElementById('userEmail').value || null,
         password: document.getElementById('userPassword').value,
         name: document.getElementById('userName').value,
         birth_date: document.getElementById('birthDate').value,
@@ -28,10 +29,18 @@ document.getElementById('signupForm').addEventListener('submit', async (e) => {
             window.location.href = '/';
         } else {
             const error = await response.json();
+            let errorMessage = error.detail || '회원가입 중 오류가 발생했습니다.';
+            
+            if (error.detail && error.detail.includes('login_id')) {
+                errorMessage = '이미 사용 중인 아이디입니다.';
+            } else if (error.detail && error.detail.includes('email')) {
+                errorMessage = '이미 사용 중인 이메일입니다.';
+            }
+            
             await Swal.fire({
                 icon: 'error',
                 title: '회원가입 실패',
-                text: error.detail || '회원가입 중 오류가 발생했습니다.',
+                text: errorMessage,
                 confirmButtonText: '확인'
             });
         }

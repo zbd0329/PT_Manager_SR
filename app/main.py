@@ -7,6 +7,7 @@ from app.core.database import engine, Base
 # from mangum import Mangum #Vercel 배포 하기위한 임포트
 from sqlalchemy import text
 from app.api.endpoints import user_router
+from app.api.endpoints.member_controller import router as member_router
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from pathlib import Path
@@ -21,15 +22,14 @@ app = FastAPI(
     version=settings.VERSION
 )
 
-# 데이터베이스 테이블 초기화
-print("Dropping all tables...")  # 디버그 로그
-AppBase.metadata.drop_all(bind=engine)
-print("Creating all tables...")  # 디버그 로그
+# 데이터베이스 테이블 생성
+print("Creating database tables...")  # 디버그 로그
 AppBase.metadata.create_all(bind=engine)
 print("Database initialization completed!")  # 디버그 로그
 
 # 라우터 등록
 app.include_router(user_router)
+app.include_router(member_router)
 
 # 정적 파일 설정 (상대 경로 사용)
 app.mount("/static", StaticFiles(directory="app/static"), name="static")
@@ -80,6 +80,11 @@ async def member_dashboard(request: Request):
 async def trainer_dashboard(request: Request):
     return templates.TemplateResponse("trainer/dashboard.html", {"request": request})
 
+@app.get("/trainer/member-management")
+async def member_management(request: Request):
+    """회원 관리 페이지를 반환합니다."""
+    return templates.TemplateResponse("member-management.html", {"request": request})
+
 @app.get("/api/member/verify-auth")
 async def verify_auth(token_data: dict = Depends(verify_token_middleware)):
-    return {"status": "authenticated", "user_data": token_data} 
+    return {"status": "authenticated", "user_data": token_data}
