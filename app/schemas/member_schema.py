@@ -32,6 +32,7 @@ class MemberLogin(BaseModel):
 
 class MemberResponse(MemberBase):
     id: str
+    sequence_number: int = Field(..., description="회원 순번")
     is_active: bool
     created_at: datetime
 

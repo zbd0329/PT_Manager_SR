@@ -3,11 +3,13 @@ from sqlalchemy.orm import Session
 from app.core.database import get_db
 from app.schemas.member_schema import MemberCreate, MemberResponse, MemberUpdate, MemberLogin
 from app.models.member_model import Member
-from app.core.security import get_current_user_from_cookie, create_access_token
+from app.core.security import get_current_user_from_cookie, create_access_token, verify_trainer
 from passlib.context import CryptContext
 from app.models.user_model import UserType
+from app.models.users_members import UserMember
 import logging
 from typing import List
+from sqlalchemy.sql import func
 
 router = APIRouter(
     prefix="/api/v1/members",
@@ -22,150 +24,171 @@ async def get_members(
     skip: int = Query(default=0, description="Skip first N items"),
     limit: int = Query(default=10, description="Limit the number of items"),
     db: Session = Depends(get_db),
-    current_user: dict = Depends(get_current_user_from_cookie)
+    current_user: dict = Depends(verify_trainer)
 ):
     """
     트레이너의 회원 목록을 조회합니다.
     """
-    if current_user.get("user_type") != "TRAINER":
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="트레이너만 회원 목록을 조회할 수 있습니다."
-        )
-
-    # 전체 회원 수 조회
-    total_count = db.query(Member)\
-        .filter(Member.trainer_id == current_user.get("sub"))\
-        .count()
-
-    # 페이지네이션된 회원 목록 조회
-    members = db.query(Member)\
-        .filter(Member.trainer_id == current_user.get("sub"))\
-        .offset(skip)\
-        .limit(limit)\
-        .all()
-
-    # Response 헤더에 전체 개수 추가
-    response.headers["X-Total-Count"] = str(total_count)
-    return members
-
-@router.post("/", response_model=MemberResponse)
-async def create_member(
-    member: MemberCreate,
-    db: Session = Depends(get_db),
-    current_user: dict = Depends(get_current_user_from_cookie)
-):
-    """
-    새로운 회원을 등록합니다.
-    """
-    # 트레이너 권한 확인
-    if current_user.get("user_type") != "TRAINER":
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="트레이너만 회원을 등록할 수 있습니다."
-        )
-
-    # 로그인 ID 중복 확인
-    if db.query(Member).filter(Member.login_id == member.login_id).first():
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="이미 사용 중인 로그인 ID입니다."
-        )
-
-    # 새 회원 생성
-    db_member = Member(
-        login_id=member.login_id,
-        name=member.name,
-        gender=member.gender,
-        contact=member.contact,
-        pt_count=member.pt_count,
-        notes=member.notes,
-        trainer_id=current_user.get("sub"),  # JWT 토큰에서 트레이너 ID 추출
-        password=pwd_context.hash(member.password)
-    )
-
     try:
-        db.add(db_member)
-        db.commit()
-        db.refresh(db_member)
-        return db_member
+        # 현재 트레이너와 연결된 회원들만 조회
+        members = db.query(Member)\
+            .join(UserMember, UserMember.member_id == Member.id)\
+            .filter(UserMember.trainer_id == current_user["sub"])\
+            .offset(skip)\
+            .limit(limit)\
+            .all()
+
+        # 전체 회원 수 조회
+        total_count = db.query(Member)\
+            .join(UserMember, UserMember.member_id == Member.id)\
+            .filter(UserMember.trainer_id == current_user["sub"])\
+            .count()
+
+        # 응답 헤더에 전체 개수 추가
+        response.headers["X-Total-Count"] = str(total_count)
+        
+        return members
     except Exception as e:
-        db.rollback()
+        logging.error(f"회원 목록 조회 중 오류 발생: {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="회원 등록 중 오류가 발생했습니다."
+            detail=str(e)
+        )
+
+@router.post("/", response_model=MemberResponse)
+async def create_member(member: MemberCreate, current_user: dict = Depends(verify_trainer), db: Session = Depends(get_db)):
+    """
+    새로운 회원을 생성하고 현재 트레이너와 연결합니다.
+    """
+    try:
+        # 회원 ID 중복 체크
+        existing_member = db.query(Member).filter(Member.login_id == member.login_id).first()
+        if existing_member:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="이미 등록된 회원 ID입니다."
+            )
+
+        # 마지막 순번 조회
+        last_sequence = db.query(func.max(Member.sequence_number)).scalar()
+        next_sequence = (last_sequence or 0) + 1
+
+        # 새 회원 생성
+        new_member = Member(
+            login_id=member.login_id,
+            name=member.name,
+            gender=member.gender,
+            contact=member.contact,
+            pt_count=member.pt_count,
+            notes=member.notes,
+            sequence_number=next_sequence
+        )
+        new_member.set_password(member.password)
+        
+        db.add(new_member)
+        db.flush()  # ID 생성을 위해 flush
+
+        # 트레이너-회원 관계 생성
+        user_member = UserMember(
+            trainer_id=current_user["sub"],
+            member_id=new_member.id
+        )
+        db.add(user_member)
+        
+        db.commit()
+        db.refresh(new_member)
+        
+        return new_member
+    except Exception as e:
+        db.rollback()
+        logging.error(f"회원 생성 중 오류 발생: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=str(e)
         )
 
 @router.get("/{member_id}", response_model=MemberResponse)
 async def get_member(
     member_id: str,
-    db: Session = Depends(get_db),
-    current_user: dict = Depends(get_current_user_from_cookie)
+    current_user: dict = Depends(verify_trainer),
+    db: Session = Depends(get_db)
 ):
     """
     특정 회원의 정보를 조회합니다.
     """
-    if current_user.get("user_type") != "TRAINER":
+    try:
+        # 현재 트레이너의 회원인지 확인
+        member = db.query(Member)\
+            .join(UserMember, UserMember.member_id == Member.id)\
+            .filter(
+                Member.id == member_id,
+                UserMember.trainer_id == current_user["sub"]
+            ).first()
+
+        if not member:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="회원을 찾을 수 없습니다."
+            )
+        
+        return member
+    except HTTPException:
+        raise
+    except Exception as e:
+        logging.error(f"회원 조회 중 오류 발생: {str(e)}")
         raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="트레이너만 회원 정보를 조회할 수 있습니다."
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=str(e)
         )
-
-    member = db.query(Member)\
-        .filter(Member.id == member_id)\
-        .filter(Member.trainer_id == current_user.get("sub"))\
-        .first()
-
-    if not member:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="회원을 찾을 수 없습니다."
-        )
-
-    return member
 
 @router.put("/{member_id}", response_model=MemberResponse)
 async def update_member(
     member_id: str,
     member_update: MemberUpdate,
-    db: Session = Depends(get_db),
-    current_user: dict = Depends(get_current_user_from_cookie)
+    current_user: dict = Depends(verify_trainer),
+    db: Session = Depends(get_db)
 ):
     """
     회원 정보를 수정합니다.
     """
-    if current_user.get("user_type") != "TRAINER":
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="트레이너만 회원 정보를 수정할 수 있습니다."
-        )
-
-    db_member = db.query(Member)\
-        .filter(Member.id == member_id)\
-        .filter(Member.trainer_id == current_user.get("sub"))\
-        .first()
-
-    if not db_member:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="회원을 찾을 수 없습니다."
-        )
-
-    # 업데이트할 필드 설정
-    for field, value in member_update.dict(exclude_unset=True).items():
-        if field == "password" and value:
-            value = pwd_context.hash(value)
-        setattr(db_member, field, value)
-
     try:
+        # 현재 트레이너의 회원인지 확인
+        member = db.query(Member)\
+            .join(UserMember, UserMember.member_id == Member.id)\
+            .filter(
+                Member.id == member_id,
+                UserMember.trainer_id == current_user["sub"]
+            ).first()
+
+        if not member:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="회원을 찾을 수 없습니다."
+            )
+
+        # 업데이트할 필드 설정
+        update_data = member_update.dict(exclude_unset=True)
+        
+        # 비밀번호가 제공된 경우 해시화
+        if "password" in update_data:
+            member.set_password(update_data.pop("password"))
+
+        # 나머지 필드 업데이트
+        for field, value in update_data.items():
+            setattr(member, field, value)
+
         db.commit()
-        db.refresh(db_member)
-        return db_member
+        db.refresh(member)
+        
+        return member
+    except HTTPException:
+        raise
     except Exception as e:
         db.rollback()
+        logging.error(f"회원 정보 수정 중 오류 발생: {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"회원 정보 수정 중 오류가 발생했습니다: {str(e)}"
+            detail=str(e)
         )
 
 @router.post("/login")

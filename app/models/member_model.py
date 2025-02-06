@@ -17,6 +17,7 @@ class Member(Base):
     __tablename__ = "members"
 
     id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    sequence_number = Column(Integer, nullable=False, unique=True)  # 회원 순번
     login_id = Column(String(50), unique=True, nullable=False)
     password = Column(String(255), nullable=False)
     name = Column(String(255), nullable=False)
