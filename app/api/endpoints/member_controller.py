@@ -62,9 +62,26 @@ async def create_member(member: MemberCreate, current_user: dict = Depends(verif
     새로운 회원을 생성하고 현재 트레이너와 연결합니다.
     """
     try:
+        # 요청 데이터 로깅
+        print("\n=== Member Creation Debug ===")
+        print(f"Received member data: {member.dict()}")
+        print(f"Current user: {current_user}")
+        
+        # 데이터 유효성 검사 로깅
+        print("\nValidating member data:")
+        print(f"login_id: {member.login_id} (min_length=4)")
+        print(f"password: {'*' * len(member.password)} (min_length=6)")
+        print(f"name: {member.name} (min_length=2)")
+        print(f"gender: {member.gender}")
+        print(f"contact: {member.contact}")
+        print(f"total_pt_count: {member.total_pt_count}")
+        print(f"remaining_pt_count: {member.remaining_pt_count}")
+        print(f"notes: {member.notes}")
+        
         # 회원 ID 중복 체크
         existing_member = db.query(Member).filter(Member.login_id == member.login_id).first()
         if existing_member:
+            print(f"Duplicate login_id found: {member.login_id}")
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="이미 등록된 회원 ID입니다."
@@ -78,6 +95,7 @@ async def create_member(member: MemberCreate, current_user: dict = Depends(verif
         
         # 첫 번째 회원이면 1, 아니면 마지막 순번 + 1
         next_sequence = 1 if last_sequence is None else last_sequence + 1
+        print(f"Next sequence number: {next_sequence}")
 
         # 새 회원 생성
         new_member = Member(
@@ -91,6 +109,7 @@ async def create_member(member: MemberCreate, current_user: dict = Depends(verif
             sequence_number=next_sequence
         )
         new_member.set_password(member.password)
+        print(f"Created new member object: {new_member.__dict__}")
         
         db.add(new_member)
         db.flush()  # ID 생성을 위해 flush
@@ -104,10 +123,15 @@ async def create_member(member: MemberCreate, current_user: dict = Depends(verif
         
         db.commit()
         db.refresh(new_member)
+        print("Successfully created member and relationship")
+        print("=== End Member Creation Debug ===\n")
         
         return new_member
+    except HTTPException:
+        raise
     except Exception as e:
         db.rollback()
+        print(f"Error during member creation: {str(e)}")
         logging.error(f"회원 생성 중 오류 발생: {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,

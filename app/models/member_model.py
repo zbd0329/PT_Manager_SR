@@ -10,8 +10,8 @@ from datetime import datetime
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 class Gender(PyEnum):
-    M = "M"
-    F = "F"
+    MALE = "MALE"
+    FEMALE = "FEMALE"
 
 class Member(Base):
     __tablename__ = "members"
@@ -21,18 +21,20 @@ class Member(Base):
     login_id = Column(String(50), unique=True, nullable=False)
     password = Column(String(255), nullable=False)
     name = Column(String(255), nullable=False)
-    gender = Column(Enum(Gender), nullable=False)
+    gender = Column(Enum(Gender), nullable=True)
     contact = Column(String(20), nullable=False)
     total_pt_count = Column(Integer, default=0)  # 총 PT 등록 횟수
     remaining_pt_count = Column(Integer, default=0)  # 남은 PT 횟수
     notes = Column(Text, nullable=True)
     is_active = Column(Boolean, default=True)
     created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
-    # M:N 관계 설정
-    trainers = relationship("User", secondary="users_members", back_populates="members")
-    # PT 세션 관계 설정
-    pt_sessions = relationship("PTSession", back_populates="member")
+    # 관계 설정
+    trainers = relationship("User", secondary="users_members", back_populates="members", overlaps="user_members,trainer")
+    pt_sessions = relationship("PTSession", back_populates="member", cascade="all, delete-orphan")
+    user_members = relationship("UserMember", back_populates="member", overlaps="trainers")
+    exercise_records = relationship("ExerciseRecord", back_populates="member", cascade="all, delete-orphan")
 
     def set_password(self, password: str):
         """ 비밀번호를 해싱하여 저장 """
