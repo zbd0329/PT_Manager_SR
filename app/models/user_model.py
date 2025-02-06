@@ -1,8 +1,10 @@
-from sqlalchemy import Column, String, Date, Enum
+from sqlalchemy import Column, String, Date, Enum, DateTime
+from sqlalchemy.orm import relationship
 from app.models.base import Base
 from passlib.context import CryptContext
 from enum import Enum as PyEnum
 import uuid
+from datetime import datetime
 
 # 비밀번호 해싱을 위한 설정
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
@@ -21,6 +23,9 @@ class User(Base):
     birth_date = Column(Date, nullable=True)
     password = Column(String(255), nullable=False)
     user_type = Column(Enum(UserType), nullable=False)
+
+    # M:N 관계 설정
+    members = relationship("Member", secondary="users_members", back_populates="trainers")
 
     def set_password(self, password: str):
         """ 비밀번호를 해싱하여 저장 """
