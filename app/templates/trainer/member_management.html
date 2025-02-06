@@ -72,8 +72,8 @@
                                 <div class="mb-3">
                                     <label for="gender" class="form-label">성별</label>
                                     <select class="form-select" id="gender" required>
-                                        <option value="M">남성</option>
-                                        <option value="F">여성</option>
+                                        <option value="MALE">남성</option>
+                                        <option value="FEMALE">여성</option>
                                     </select>
                                 </div>
                                 <div class="mb-3">
@@ -197,7 +197,7 @@
                     <td>${member.sequence_number}</td>
                     <td>${member.name}</td>
                     <td>${member.login_id}</td>
-                    <td>${member.gender === 'M' ? '남성' : '여성'}</td>
+                    <td>${member.gender === 'MALE' ? '남성' : '여성'}</td>
                     <td>${member.contact}</td>
                     <td>${member.total_pt_count || 0} / ${member.remaining_pt_count || 0}</td>
                     <td>${member.notes || '-'}</td>
@@ -413,6 +413,18 @@
                         notes: form.querySelector('#notes').value || null
                     };
 
+                    // 요청 데이터 로깅
+                    console.log('=== 회원 등록 요청 데이터 ===');
+                    console.log('login_id:', memberData.login_id);
+                    console.log('password:', '*'.repeat(memberData.password.length));
+                    console.log('name:', memberData.name);
+                    console.log('gender:', memberData.gender);
+                    console.log('contact:', memberData.contact);
+                    console.log('total_pt_count:', memberData.total_pt_count);
+                    console.log('remaining_pt_count:', memberData.remaining_pt_count);
+                    console.log('notes:', memberData.notes);
+                    console.log('========================');
+
                     try {
                         const response = await fetchWithAuth('/api/v1/members', {
                             method: 'POST',
@@ -423,35 +435,45 @@
                             body: JSON.stringify(memberData)
                         });
 
-                        // 응답 데이터를 먼저 확인
+                        // 응답 상태 및 데이터 로깅
                         console.log('서버 응답 상태:', response.status);
-                        const responseData = await response.json();
-                        console.log('서버 응답 데이터:', responseData);
-
-                        if (response.ok) {
-                            await Swal.fire({
-                                icon: 'success',
-                                title: '회원 등록 성공!',
-                                text: '회원이 성공적으로 등록되었습니다.',
-                                confirmButtonText: '확인'
-                            });
-                            resetForm();
-                            loadMembers((currentPage - 1) * itemsPerPage);
-                        } else {
-                            const error = await response.json();
-                            await Swal.fire({
-                                icon: 'error',
-                                title: '회원 등록 실패',
-                                text: error.detail || '회원 등록 중 오류가 발생했습니다.',
-                                confirmButtonText: '확인'
-                            });
+                        const responseText = await response.text();
+                        console.log('서버 응답 원본:', responseText);
+                        
+                        let responseData;
+                        try {
+                            responseData = JSON.parse(responseText);
+                            console.log('서버 응답 데이터:', responseData);
+                        } catch (e) {
+                            console.error('JSON 파싱 실패:', e);
+                            responseData = { detail: responseText };
                         }
+
+                        if (!response.ok) {
+                            throw new Error(JSON.stringify(responseData));
+                        }
+
+                        await Swal.fire({
+                            icon: 'success',
+                            title: '회원 등록 성공!',
+                            text: '회원이 성공적으로 등록되었습니다.',
+                            confirmButtonText: '확인'
+                        });
+                        resetForm();
+                        loadMembers((currentPage - 1) * itemsPerPage);
                     } catch (error) {
-                        console.error('Error:', error);
+                        console.error('Error details:', error);
+                        let errorMessage = '회원 등록 중 오류가 발생했습니다.';
+                        try {
+                            const errorData = JSON.parse(error.message);
+                            errorMessage = errorData.detail || errorMessage;
+                        } catch (e) {
+                            console.error('Error message parsing failed:', e);
+                        }
                         await Swal.fire({
                             icon: 'error',
-                            title: '서버 오류',
-                            text: '서버와의 통신 중 오류가 발생했습니다.',
+                            title: '회원 등록 실패',
+                            text: errorMessage,
                             confirmButtonText: '확인'
                         });
                     }

@@ -6,13 +6,13 @@ CREATE TABLE users (
     name VARCHAR(50) NOT NULL,  
     birth_date DATE,  
     password VARCHAR(255) NOT NULL,  
-    user_type ENUM('member', 'trainer') NOT NULL  
+    user_type ENUM('MEMBER', 'TRAINER') NOT NULL  
 );
 
 -- 회원 정보
 CREATE TABLE members (
     id CHAR(36) PRIMARY KEY DEFAULT (UUID()),  
-    sequence_number INT NOT NULL UNIQUE,  -- 회원 순번
+    sequence_number INT NOT NULL UNIQUE,  -- 회원 순번 (트레이너별로 관리)
     login_id VARCHAR(50) UNIQUE NOT NULL,  
     password VARCHAR(255) NOT NULL,  
     name VARCHAR(255) NOT NULL,  
@@ -32,7 +32,8 @@ CREATE TABLE users_members (
     member_id CHAR(36) NOT NULL,  
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,  
     FOREIGN KEY (trainer_id) REFERENCES users(id) ON DELETE CASCADE,  
-    FOREIGN KEY (member_id) REFERENCES members(id) ON DELETE CASCADE  
+    FOREIGN KEY (member_id) REFERENCES members(id) ON DELETE CASCADE,
+    UNIQUE KEY unique_trainer_member (trainer_id, member_id)  -- 중복 관계 방지
 );
 
 -- PT 수업 기록 테이블
@@ -48,23 +49,31 @@ CREATE TABLE pt_sessions (
     notes TEXT NULL,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (member_id) REFERENCES members(id) ON DELETE CASCADE,
-    FOREIGN KEY (trainer_id) REFERENCES users(id) ON DELETE CASCADE
+    FOREIGN KEY (trainer_id) REFERENCES users(id) ON DELETE CASCADE,
+    UNIQUE KEY unique_session (member_id, trainer_id, session_number)  -- 회차 중복 방지
 );
 
 -- 운동 기록 테이블
 CREATE TABLE exercise_records (
     id CHAR(36) PRIMARY KEY DEFAULT (UUID()),  
-    session_date DATE NOT NULL,                
+    session_id CHAR(36) NOT NULL,  -- PT 세션 ID 추가
     exercise_name VARCHAR(100) NOT NULL,       
     duration INT NOT NULL,                     
     repetitions INT NOT NULL,                  
     body_part TEXT NOT NULL,                   
-    input_source ENUM('personal', 'trainer') NOT NULL DEFAULT 'personal',  
+    input_source ENUM('MEMBER', 'TRAINER') NOT NULL DEFAULT 'MEMBER',  
     member_id CHAR(36) NOT NULL,               
     trainer_id CHAR(36) NULL,                  
     notes TEXT NULL,                           
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,  
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,  
     FOREIGN KEY (member_id) REFERENCES members(id) ON DELETE CASCADE,  
-    FOREIGN KEY (trainer_id) REFERENCES users(id) ON DELETE SET NULL  
+    FOREIGN KEY (trainer_id) REFERENCES users(id) ON DELETE SET NULL,
+    FOREIGN KEY (session_id) REFERENCES pt_sessions(id) ON DELETE CASCADE
 );
+
+-- 인덱스 추가
+CREATE INDEX idx_members_login ON members(login_id);
+CREATE INDEX idx_users_login ON users(login_id);
+CREATE INDEX idx_pt_sessions_date ON pt_sessions(session_date);
+CREATE INDEX idx_exercise_records_session ON exercise_records(session_id);

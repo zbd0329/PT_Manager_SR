@@ -24,10 +24,11 @@ class User(Base):
     password = Column(String(255), nullable=False)
     user_type = Column(Enum(UserType), nullable=False)
 
-    # M:N 관계 설정
-    members = relationship("Member", secondary="users_members", back_populates="trainers")
-    # PT 세션 관계 설정
+    # 관계 설정
+    members = relationship("Member", secondary="users_members", back_populates="trainers", overlaps="trainer_members,member")
     pt_sessions = relationship("PTSession", back_populates="trainer")
+    trainer_members = relationship("UserMember", back_populates="trainer", overlaps="members")
+    exercise_records = relationship("ExerciseRecord", back_populates="trainer")
 
     def set_password(self, password: str):
         """ 비밀번호를 해싱하여 저장 """
