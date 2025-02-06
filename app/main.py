@@ -8,6 +8,7 @@ from app.core.database import engine, Base
 from sqlalchemy import text
 from app.api.endpoints import user_router
 from app.api.endpoints.member_controller import router as member_router
+from app.api.endpoints.trainer_controller import router as trainer_router
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from pathlib import Path
@@ -31,6 +32,7 @@ print("Database initialization completed!")  # 디버그 로그
 # 라우터 등록
 app.include_router(user_router)
 app.include_router(member_router)
+app.include_router(trainer_router)
 
 # 정적 파일 설정 (상대 경로 사용)
 app.mount("/static", StaticFiles(directory="app/static"), name="static")
@@ -93,7 +95,7 @@ async def trainer_dashboard(request: Request, current_user: dict = Depends(verif
 @app.get("/trainer/member-management")
 async def member_management(request: Request, current_user: dict = Depends(verify_trainer)):
     """회원 관리 페이지를 반환합니다."""
-    return templates.TemplateResponse("member-management.html", {"request": request})
+    return templates.TemplateResponse("trainer/member_management.html", {"request": request})
 
 @app.get("/api/member/verify-auth")
 async def verify_auth(request: Request):

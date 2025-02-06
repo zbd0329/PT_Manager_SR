@@ -1,0 +1,53 @@
+-- 트레이너 & 일반 사용자 정보
+CREATE TABLE users (
+    id CHAR(36) PRIMARY KEY DEFAULT (UUID()),  
+    login_id VARCHAR(50) UNIQUE NOT NULL,  
+    email VARCHAR(100) UNIQUE,  
+    name VARCHAR(50) NOT NULL,  
+    birth_date DATE,  
+    password VARCHAR(255) NOT NULL,  
+    user_type ENUM('member', 'trainer') NOT NULL  
+);
+
+-- 회원 정보
+CREATE TABLE members (
+    id CHAR(36) PRIMARY KEY DEFAULT (UUID()),  
+    sequence_number INT NOT NULL UNIQUE,  -- 회원 순번 추가
+    login_id VARCHAR(50) UNIQUE NOT NULL,  
+    password VARCHAR(255) NOT NULL,  
+    name VARCHAR(255) NOT NULL,  
+    gender ENUM('M', 'F') NOT NULL,  
+    contact VARCHAR(20) NOT NULL,  
+    pt_count INT DEFAULT 0,  
+    notes TEXT NULL,  
+    is_active BOOLEAN DEFAULT TRUE,  
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP  
+);
+
+-- 트레이너 & 회원 관계 테이블 (M:N)
+CREATE TABLE users_members (
+    id CHAR(36) PRIMARY KEY DEFAULT (UUID()),  
+    trainer_id CHAR(36) NOT NULL,  
+    member_id CHAR(36) NOT NULL,  
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,  
+    FOREIGN KEY (trainer_id) REFERENCES users(id) ON DELETE CASCADE,  
+    FOREIGN KEY (member_id) REFERENCES members(id) ON DELETE CASCADE  
+);
+
+-- 운동 기록 테이블
+CREATE TABLE exercise_records (
+    id CHAR(36) PRIMARY KEY DEFAULT (UUID()),  
+    session_date DATE NOT NULL,                
+    exercise_name VARCHAR(100) NOT NULL,       
+    duration INT NOT NULL,                     
+    repetitions INT NOT NULL,                  
+    body_part TEXT NOT NULL,                   
+    input_source ENUM('personal', 'trainer') NOT NULL DEFAULT 'personal',  
+    member_id CHAR(36) NOT NULL,               
+    trainer_id CHAR(36) NULL,                  
+    notes TEXT NULL,                           
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,  
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,  
+    FOREIGN KEY (member_id) REFERENCES members(id) ON DELETE CASCADE,  
+    FOREIGN KEY (trainer_id) REFERENCES users(id) ON DELETE SET NULL  
+);
