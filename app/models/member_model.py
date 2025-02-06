@@ -1,12 +1,17 @@
 from sqlalchemy import Column, String, Integer, Text, Boolean, DateTime, Enum, ForeignKey
+from sqlalchemy.orm import relationship
 from app.models.base import Base
+from passlib.context import CryptContext
+from enum import Enum as PyEnum
 import uuid
 from datetime import datetime
-import enum
 
-class GenderEnum(str, enum.Enum):
-    MALE = "M"
-    FEMALE = "F"
+# 비밀번호 해싱을 위한 설정
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+
+class Gender(PyEnum):
+    M = "M"
+    F = "F"
 
 class Member(Base):
     __tablename__ = "members"
@@ -15,10 +20,20 @@ class Member(Base):
     login_id = Column(String(50), unique=True, nullable=False)
     password = Column(String(255), nullable=False)
     name = Column(String(255), nullable=False)
-    gender = Column(Enum(GenderEnum), nullable=False)
+    gender = Column(Enum(Gender), nullable=False)
     contact = Column(String(20), nullable=False)
     pt_count = Column(Integer, default=0)
     notes = Column(Text, nullable=True)
-    trainer_id = Column(String(36), ForeignKey('users.id', ondelete='CASCADE'), nullable=False)
     is_active = Column(Boolean, default=True)
     created_at = Column(DateTime, default=datetime.utcnow)
+
+    # M:N 관계 설정
+    trainers = relationship("User", secondary="users_members", back_populates="members")
+
+    def set_password(self, password: str):
+        """ 비밀번호를 해싱하여 저장 """
+        self.password = pwd_context.hash(password)
+
+    def verify_password(self, plain_password: str) -> bool:
+        """ 입력된 비밀번호가 저장된 해시와 일치하는지 검증 """
+        return pwd_context.verify(plain_password, self.password)
