@@ -23,13 +23,16 @@ class Member(Base):
     name = Column(String(255), nullable=False)
     gender = Column(Enum(Gender), nullable=False)
     contact = Column(String(20), nullable=False)
-    pt_count = Column(Integer, default=0)
+    total_pt_count = Column(Integer, default=0)  # 총 PT 등록 횟수
+    remaining_pt_count = Column(Integer, default=0)  # 남은 PT 횟수
     notes = Column(Text, nullable=True)
     is_active = Column(Boolean, default=True)
     created_at = Column(DateTime, default=datetime.utcnow)
 
     # M:N 관계 설정
     trainers = relationship("User", secondary="users_members", back_populates="members")
+    # PT 세션 관계 설정
+    pt_sessions = relationship("PTSession", back_populates="member")
 
     def set_password(self, password: str):
         """ 비밀번호를 해싱하여 저장 """

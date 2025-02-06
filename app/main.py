@@ -9,6 +9,7 @@ from sqlalchemy import text
 from app.api.endpoints import user_router
 from app.api.endpoints.member_controller import router as member_router
 from app.api.endpoints.trainer_controller import router as trainer_router
+from app.api.endpoints.pt_session_controller import router as pt_session_router
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from pathlib import Path
@@ -33,6 +34,7 @@ print("Database initialization completed!")  # 디버그 로그
 app.include_router(user_router)
 app.include_router(member_router)
 app.include_router(trainer_router)
+app.include_router(pt_session_router)
 
 # 정적 파일 설정 (상대 경로 사용)
 app.mount("/static", StaticFiles(directory="app/static"), name="static")
