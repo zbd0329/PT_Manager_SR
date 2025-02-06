@@ -30,6 +30,7 @@
                                 <table class="table table-hover">
                                     <thead>
                                         <tr>
+                                            <th>회원번호</th>
                                             <th>이름</th>
                                             <th>로그인 ID</th>
                                             <th>성별</th>
@@ -193,6 +194,7 @@
             members.forEach(member => {
                 const row = document.createElement('tr');
                 row.innerHTML = `
+                    <td>${member.sequence_number}</td>
                     <td>${member.name}</td>
                     <td>${member.login_id}</td>
                     <td>${member.gender === 'M' ? '남성' : '여성'}</td>
