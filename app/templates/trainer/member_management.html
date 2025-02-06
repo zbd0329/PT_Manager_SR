@@ -35,7 +35,7 @@
                                             <th>로그인 ID</th>
                                             <th>성별</th>
                                             <th>연락처</th>
-                                            <th>PT 횟수</th>
+                                            <th>PT 횟수 (총/남은)</th>
                                             <th>특이사항</th>
                                             <th>작업</th>
                                         </tr>
@@ -82,8 +82,8 @@
                                            placeholder="예: 010-1234-5678">
                                 </div>
                                 <div class="mb-3">
-                                    <label for="ptCount" class="form-label">PT 횟수</label>
-                                    <input type="number" class="form-control" id="ptCount" min="0" value="0">
+                                    <label for="total_pt_count" class="form-label">PT 등록 횟수</label>
+                                    <input type="number" class="form-control" id="total_pt_count" min="0" value="0">
                                 </div>
                                 <div class="mb-3">
                                     <label for="notes" class="form-label">특이사항</label>
@@ -199,7 +199,7 @@
                     <td>${member.login_id}</td>
                     <td>${member.gender === 'M' ? '남성' : '여성'}</td>
                     <td>${member.contact}</td>
-                    <td>${member.pt_count}</td>
+                    <td>${member.total_pt_count || 0} / ${member.remaining_pt_count || 0}</td>
                     <td>${member.notes || '-'}</td>
                     <td>
                         <button class="btn btn-sm btn-outline-primary edit-member" data-member-id="${member.id}">
@@ -247,7 +247,7 @@
             editForm.querySelector('#name').value = member.name;
             editForm.querySelector('#gender').value = member.gender;
             editForm.querySelector('#contact').value = member.contact;
-            editForm.querySelector('#ptCount').value = member.pt_count;
+            editForm.querySelector('#total_pt_count').value = member.total_pt_count || 0;
             editForm.querySelector('#notes').value = member.notes || '';
             
             // 로그인 ID 필드를 읽기 전용으로 변경
@@ -283,11 +283,13 @@
         async function handleEditSubmit(e, memberId) {
             e.preventDefault();
 
+            const ptCount = parseInt(document.getElementById('total_pt_count').value);
             const memberData = {
                 name: document.getElementById('name').value,
                 gender: document.getElementById('gender').value,
                 contact: document.getElementById('contact').value,
-                pt_count: parseInt(document.getElementById('ptCount').value),
+                total_pt_count: ptCount,
+                remaining_pt_count: ptCount,  // 수정 시에도 총 횟수와 남은 횟수를 동일하게 설정
                 notes: document.getElementById('notes').value || null
             };
 
@@ -399,13 +401,15 @@
                 form.onsubmit = async (e) => {
                     e.preventDefault();
 
+                    const ptCount = parseInt(form.querySelector('#total_pt_count').value);
                     const memberData = {
                         login_id: form.querySelector('#loginId').value,
                         password: form.querySelector('#password').value,
                         name: form.querySelector('#name').value,
                         gender: form.querySelector('#gender').value,
                         contact: form.querySelector('#contact').value,
-                        pt_count: parseInt(form.querySelector('#ptCount').value),
+                        total_pt_count: ptCount,
+                        remaining_pt_count: ptCount,  // 초기에는 총 횟수와 남은 횟수가 동일
                         notes: form.querySelector('#notes').value || null
                     };
 

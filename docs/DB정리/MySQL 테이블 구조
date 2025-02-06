@@ -12,13 +12,14 @@ CREATE TABLE users (
 -- 회원 정보
 CREATE TABLE members (
     id CHAR(36) PRIMARY KEY DEFAULT (UUID()),  
-    sequence_number INT NOT NULL UNIQUE,  -- 회원 순번 추가
+    sequence_number INT NOT NULL UNIQUE,  -- 회원 순번
     login_id VARCHAR(50) UNIQUE NOT NULL,  
     password VARCHAR(255) NOT NULL,  
     name VARCHAR(255) NOT NULL,  
     gender ENUM('M', 'F') NOT NULL,  
     contact VARCHAR(20) NOT NULL,  
-    pt_count INT DEFAULT 0,  
+    total_pt_count INT DEFAULT 0,  -- 총 PT 등록 횟수
+    remaining_pt_count INT DEFAULT 0,  -- 남은 PT 횟수
     notes TEXT NULL,  
     is_active BOOLEAN DEFAULT TRUE,  
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP  
@@ -32,6 +33,22 @@ CREATE TABLE users_members (
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,  
     FOREIGN KEY (trainer_id) REFERENCES users(id) ON DELETE CASCADE,  
     FOREIGN KEY (member_id) REFERENCES members(id) ON DELETE CASCADE  
+);
+
+-- PT 수업 기록 테이블
+CREATE TABLE pt_sessions (
+    id CHAR(36) PRIMARY KEY DEFAULT (UUID()),
+    member_id CHAR(36) NOT NULL,
+    trainer_id CHAR(36) NOT NULL,
+    session_number INT NOT NULL,  -- PT 회차
+    session_date DATE NOT NULL,
+    start_time TIME NOT NULL,
+    end_time TIME NOT NULL,
+    is_completed BOOLEAN DEFAULT FALSE,  -- 수업 완료 여부
+    notes TEXT NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (member_id) REFERENCES members(id) ON DELETE CASCADE,
+    FOREIGN KEY (trainer_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
 -- 운동 기록 테이블

@@ -26,6 +26,8 @@ class User(Base):
 
     # M:N 관계 설정
     members = relationship("Member", secondary="users_members", back_populates="trainers")
+    # PT 세션 관계 설정
+    pt_sessions = relationship("PTSession", back_populates="trainer")
 
     def set_password(self, password: str):
         """ 비밀번호를 해싱하여 저장 """

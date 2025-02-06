@@ -30,10 +30,11 @@ async def get_members(
     트레이너의 회원 목록을 조회합니다.
     """
     try:
-        # 현재 트레이너와 연결된 회원들만 조회
+        # 현재 트레이너와 연결된 회원들만 조회 (sequence_number로 정렬)
         members = db.query(Member)\
             .join(UserMember, UserMember.member_id == Member.id)\
             .filter(UserMember.trainer_id == current_user["sub"])\
+            .order_by(Member.sequence_number)\
             .offset(skip)\
             .limit(limit)\
             .all()
@@ -69,9 +70,14 @@ async def create_member(member: MemberCreate, current_user: dict = Depends(verif
                 detail="이미 등록된 회원 ID입니다."
             )
 
-        # 마지막 순번 조회
-        last_sequence = db.query(func.max(Member.sequence_number)).scalar()
-        next_sequence = (last_sequence or 0) + 1
+        # 현재 트레이너의 마지막 회원 순번 조회
+        last_sequence = db.query(func.max(Member.sequence_number))\
+            .join(UserMember, UserMember.member_id == Member.id)\
+            .filter(UserMember.trainer_id == current_user["sub"])\
+            .scalar()
+        
+        # 첫 번째 회원이면 1, 아니면 마지막 순번 + 1
+        next_sequence = 1 if last_sequence is None else last_sequence + 1
 
         # 새 회원 생성
         new_member = Member(
@@ -79,7 +85,8 @@ async def create_member(member: MemberCreate, current_user: dict = Depends(verif
             name=member.name,
             gender=member.gender,
             contact=member.contact,
-            pt_count=member.pt_count,
+            total_pt_count=member.total_pt_count,
+            remaining_pt_count=member.remaining_pt_count,
             notes=member.notes,
             sequence_number=next_sequence
         )
