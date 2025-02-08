@@ -1,26 +1,51 @@
 이 파일을 읽을때는 마크다운 형식으로 읽어주세요.
 
-# FastAPI 프로젝트 구조 설정 
+# pt manager FastAPI 프로젝트 구조 설정 
 app/
 ├── api/
-│   ├── endpoints/      # API 라우터
-│   └── dependencies/   # 의존성 주입 관련 모듈
+│   ├── endpoints/                  # 전체 API 라우터
+│   │   └── user_endpoints.py       # 사용자 관련 엔드포인트
+│   └── dependencies/               # 의존성 주입 관련 모듈
+│       └── common.py
 ├── core/
-│   ├── config.py      # 환경 설정
-│   ├── security.py    # 보안 관련
-│   └── exceptions.py  # 커스텀 예외 처리
-├── db/                # 데이터베이스 관련
-│   ├── session.py     # DB 세션 관리
-│   └── base.py       # Base 모델
-├── models/           # SQLAlchemy 모델
-├── schemas/          # Pydantic 모델
-├── services/         # 비즈니스 로직
-├── repositories/     # DB 쿼리 로직
+│   ├── config.py                   # 환경 설정
+│   ├── security.py                 # 보안 관련
+│   └── exceptions.py               # 커스텀 예외 처리
+├── db/
+│   ├── session.py                  # DB 세션 관리
+│   └── base.py                     # Base 모델
+├── models/
+│   ├── user_model.py               # User 모델
+│   └── ...                         # (필요에 따라 기타 모델)
+├── schemas/
+│   ├── user_schema.py              # User 스키마 (Pydantic 모델)
+│   └── ...                         
+├── services/
+│   └── user_service.py             # User 관련 비즈니스 로직
+├── repositories/
+│   └── user_repository.py          # User 관련 DB 쿼리 로직
+├── distributor/                    # <<--- 돈뿌리기 관련 기능 모듈 (신규)
+│   ├── api/
+│   │   └── endpoints/
+│   │       └── distributor_endpoints.py   # 돈뿌리기, 받기, 조회 API 엔드포인트
+│   ├── models/
+│   │   ├── money_spread_model.py            # 뿌리기(돈뿌리기) DB 모델
+│   │   └── money_distribution_model.py      # 분배 내역 DB 모델
+│   ├── schemas/
+│   │   ├── money_spread_schema.py           # 뿌리기 관련 Pydantic 스키마
+│   │   └── money_distribution_schema.py     # 분배 내역 관련 Pydantic 스키마
+│   ├── services/
+│   │   └── distributor_service.py           # 돈뿌리기 기능의 비즈니스 로직
+│   └── repositories/
+│       ├── money_spread_repository.py       # 뿌리기 DB 쿼리 로직
+│       └── money_distribution_repository.py # 분배 내역 DB 쿼리 로직
 ├── tests/
-│   ├── conftest.py   # pytest 설정
+│   ├── conf_test.py                # pytest 설정
 │   └── api/
-├── utils/
-└── main.py
+│       ├── user_test.py            # User API 테스트
+│       └── distributor_test.py     # 돈뿌리기 관련 API 테스트
+└── main.py                         # FastAPI 애플리케이션 시작점
+
 
 
 # FastAPI 함수명 및 파일명 규칙
@@ -57,13 +82,37 @@ async def save_distribution(token: str):
 - 개발/배포 환경 일관성
 - 멀티 컨테이너 구성 (FastAPI, MySQL, Redis)
 
-## 3.JWT
+## 3. JWT & Cookie
 - API 인증/인가 구현
 - 헤더를 통한 사용자/룸 식별 보안 강화
+- HTTP-only 쿠키를 통한 토큰 관리
+  - 쿠키 설정:
+    - httponly: True (XSS 공격 방지)
+    - secure: False (개발환경), True (프로덕션)
+    - samesite: "lax"
+    - max_age: 1800 (30분)
 
-## 4.Alembic
+## 4. Alembic
 - 데이터베이스 마이그레이션 관리
 - 스키마 버전 관리
+
+## 5. SQLAlchemy
+- ORM을 통한 데이터베이스 조작
+- 관계 매핑 (1:N, M:N)
+- 세션 관리 및 트랜잭션 처리
+
+## 6. Pydantic
+- 데이터 검증 및 직렬화
+- API 스키마 정의
+- 설정 관리
+
+## 7. Bcrypt
+- 비밀번호 해싱
+- 보안 강화
+
+## 8. UUID
+- 고유 식별자 생성
+- 데이터베이스 Primary Key 관리
 
 # 기술스택 관련 추가 설정
 ## 1. Redis 설정
@@ -76,17 +125,53 @@ async def save_distribution(token: str):
 ## 2. Docker 관련
 - 컨테이너 명명 규칙: 
   {프로젝트명}-{서비스}-{환경}
-  예: "money-api-dev", "money-redis-dev"
+  예: "pt-api-dev", "pt-mysql-dev", "pt-redis-dev"
 
-## 3. JWT 설정
+## 3. JWT & Cookie 설정
 - 토큰 만료 시간: Access Token (30분)
-- 페이로드 구조 정의
+- 쿠키 이름: "access_token"
+- 쿠키 형식: "Bearer {token}"
+- 페이로드 구조:
+  ```json
   {
-    "user_id": int,
-    "room_id": str,
-    "exp": int
+    "sub": "user_uuid",
+    "user_type": "MEMBER|TRAINER",
+    "name": "user_name",
+    "exp": "timestamp"
   }
+  ```
 
+## 4. SQLAlchemy 설정
+- 세션 관리:
+  ```python
+  from sqlalchemy.orm import sessionmaker
+  SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+  ```
+- 모델 기본 설정:
+  ```python
+  from sqlalchemy.ext.declarative import declarative_base
+  Base = declarative_base()
+  ```
+
+## 5. Pydantic 설정
+- 모델 설정:
+  ```python
+  class Config:
+      from_attributes = True
+      json_encoders = {
+          datetime: lambda v: v.strftime("%Y-%m-%d %H:%M:%S")
+      }
+  ```
+
+## 6. 로깅 설정
+- 로그 레벨: INFO (개발환경), WARNING (프로덕션)
+- 로그 포맷:
+  ```python
+  logging.basicConfig(
+      level=logging.INFO,
+      format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+  )
+  ```
 
 # 명령어 알려줄때 mac 명령어 사용
 - pip대신 pip3 사용

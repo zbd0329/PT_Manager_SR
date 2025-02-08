@@ -1,79 +1,83 @@
 -- 트레이너 & 일반 사용자 정보
 CREATE TABLE users (
-    id CHAR(36) PRIMARY KEY DEFAULT (UUID()),  
-    login_id VARCHAR(50) UNIQUE NOT NULL,  
-    email VARCHAR(100) UNIQUE,  
-    name VARCHAR(50) NOT NULL,  
-    birth_date DATE,  
-    password VARCHAR(255) NOT NULL,  
-    user_type ENUM('MEMBER', 'TRAINER') NOT NULL  
+    id CHAR(36) PRIMARY KEY DEFAULT (UUID()),           -- 사용자 고유 식별자 (UUID)
+    login_id VARCHAR(50) UNIQUE NOT NULL,               -- 로그인 아이디 (중복 불가)
+    email VARCHAR(100) UNIQUE,                          -- 이메일 주소 (중복 불가, 선택사항)
+    name VARCHAR(50) NOT NULL,                          -- 사용자 이름
+    birth_date DATE,                                    -- 생년월일 (선택사항)
+    password VARCHAR(255) NOT NULL,                     -- 암호화된 비밀번호
+    user_type ENUM('MEMBER', 'TRAINER') NOT NULL,       -- 사용자 유형 (회원/트레이너)
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,      -- 계정 생성 일시
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP  -- 정보 수정 일시
 );
 
 -- 회원 정보
 CREATE TABLE members (
-    id CHAR(36) PRIMARY KEY DEFAULT (UUID()),  
-    sequence_number INT NOT NULL UNIQUE,  -- 회원 순번 (트레이너별로 관리)
-    login_id VARCHAR(50) UNIQUE NOT NULL,  
-    password VARCHAR(255) NOT NULL,  
-    name VARCHAR(255) NOT NULL,  
-    gender ENUM('M', 'F') NOT NULL,  
-    contact VARCHAR(20) NOT NULL,  
-    total_pt_count INT DEFAULT 0,  -- 총 PT 등록 횟수
-    remaining_pt_count INT DEFAULT 0,  -- 남은 PT 횟수
-    notes TEXT NULL,  
-    is_active BOOLEAN DEFAULT TRUE,  
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP  
+    id CHAR(36) PRIMARY KEY DEFAULT (UUID()),           -- 회원 고유 식별자 (UUID)
+    sequence_number INT NOT NULL UNIQUE,                -- 회원 순번 (트레이너별 관리용)
+    login_id VARCHAR(50) UNIQUE NOT NULL,               -- 로그인 아이디 (중복 불가)
+    password VARCHAR(255) NOT NULL,                     -- 암호화된 비밀번호
+    name VARCHAR(255) NOT NULL,                         -- 회원 이름
+    gender ENUM('MALE', 'FEMALE') NOT NULL,             -- 성별 (남성/여성)
+    contact VARCHAR(20) NOT NULL,                       -- 연락처 (전화번호)
+    total_pt_count INT DEFAULT 0,                       -- 총 PT 등록 횟수
+    remaining_pt_count INT DEFAULT 0,                   -- 남은 PT 횟수
+    notes TEXT NULL,                                    -- 특이사항 또는 메모
+    is_active BOOLEAN DEFAULT TRUE,                     -- 회원 활성화 상태
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,      -- 회원 등록 일시
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP  -- 정보 수정 일시
 );
 
 -- 트레이너 & 회원 관계 테이블 (M:N)
 CREATE TABLE users_members (
-    id CHAR(36) PRIMARY KEY DEFAULT (UUID()),  
-    trainer_id CHAR(36) NOT NULL,  
-    member_id CHAR(36) NOT NULL,  
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,  
+    id CHAR(36) PRIMARY KEY DEFAULT (UUID()),           -- 관계 고유 식별자 (UUID)
+    trainer_id CHAR(36) NOT NULL,                       -- 트레이너 ID (users 테이블 참조)
+    member_id CHAR(36) NOT NULL,                        -- 회원 ID (members 테이블 참조)
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,      -- 관계 생성 일시
     FOREIGN KEY (trainer_id) REFERENCES users(id) ON DELETE CASCADE,  
     FOREIGN KEY (member_id) REFERENCES members(id) ON DELETE CASCADE,
-    UNIQUE KEY unique_trainer_member (trainer_id, member_id)  -- 중복 관계 방지
+    UNIQUE KEY unique_trainer_member (trainer_id, member_id)  -- 트레이너-회원 관계 중복 방지
 );
 
 -- PT 수업 기록 테이블
 CREATE TABLE pt_sessions (
-    id CHAR(36) PRIMARY KEY DEFAULT (UUID()),
-    member_id CHAR(36) NOT NULL,
-    trainer_id CHAR(36) NOT NULL,
-    session_number INT NOT NULL,  -- PT 회차
-    session_date DATE NOT NULL,
-    start_time TIME NOT NULL,
-    end_time TIME NOT NULL,
-    is_completed BOOLEAN DEFAULT FALSE,  -- 수업 완료 여부
-    notes TEXT NULL,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    id CHAR(36) PRIMARY KEY DEFAULT (UUID()),           -- 세션 고유 식별자 (UUID)
+    member_id CHAR(36) NOT NULL,                        -- 회원 ID (members 테이블 참조)
+    trainer_id CHAR(36) NULL,                           -- 트레이너 ID (선택사항, users 테이블 참조)
+    session_number INT NOT NULL,                        -- PT 회차 번호
+    session_date DATE NOT NULL,                         -- 수업 날짜
+    start_time TIME NOT NULL,                           -- 수업 시작 시간
+    end_time TIME NOT NULL,                             -- 수업 종료 시간
+    is_completed BOOLEAN DEFAULT FALSE,                 -- 수업 완료 여부
+    notes TEXT NULL,                                    -- 수업 관련 메모
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,      -- 세션 생성 일시
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,  -- 세션 수정 일시
     FOREIGN KEY (member_id) REFERENCES members(id) ON DELETE CASCADE,
-    FOREIGN KEY (trainer_id) REFERENCES users(id) ON DELETE CASCADE,
-    UNIQUE KEY unique_session (member_id, trainer_id, session_number)  -- 회차 중복 방지
+    FOREIGN KEY (trainer_id) REFERENCES users(id) ON DELETE SET NULL  -- 트레이너 삭제 시 NULL로 설정
 );
 
 -- 운동 기록 테이블
 CREATE TABLE exercise_records (
-    id CHAR(36) PRIMARY KEY DEFAULT (UUID()),  
-    session_id CHAR(36) NOT NULL,  -- PT 세션 ID 추가
-    exercise_name VARCHAR(100) NOT NULL,       
-    duration INT NOT NULL,                     
-    repetitions INT NOT NULL,                  
-    body_part TEXT NOT NULL,                   
-    input_source ENUM('MEMBER', 'TRAINER') NOT NULL DEFAULT 'MEMBER',  
-    member_id CHAR(36) NOT NULL,               
-    trainer_id CHAR(36) NULL,                  
-    notes TEXT NULL,                           
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,  
-    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,  
+    id CHAR(36) PRIMARY KEY DEFAULT (UUID()),           -- 운동 기록 고유 식별자 (UUID)
+    session_id CHAR(36) NOT NULL,                       -- PT 세션 ID (pt_sessions 테이블 참조)
+    exercise_name VARCHAR(100) NOT NULL,                -- 운동 이름
+    duration INT NOT NULL,                              -- 운동 시간 (초 단위)
+    repetitions INT NOT NULL,                           -- 반복 횟수
+    sets INT NOT NULL DEFAULT 1,                        -- 세트 수 (기본값 1)
+    body_part TEXT NOT NULL,                            -- 운동 부위
+    input_source ENUM('MEMBER', 'TRAINER') NOT NULL DEFAULT 'MEMBER',  -- 기록 입력자 구분
+    member_id CHAR(36) NOT NULL,                        -- 회원 ID (members 테이블 참조)
+    trainer_id CHAR(36) NULL,                           -- 트레이너 ID (선택사항, users 테이블 참조)
+    notes TEXT NULL,                                    -- 운동 관련 메모
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,      -- 기록 생성 일시
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,  -- 기록 수정 일시
     FOREIGN KEY (member_id) REFERENCES members(id) ON DELETE CASCADE,  
     FOREIGN KEY (trainer_id) REFERENCES users(id) ON DELETE SET NULL,
     FOREIGN KEY (session_id) REFERENCES pt_sessions(id) ON DELETE CASCADE
 );
 
 -- 인덱스 추가
-CREATE INDEX idx_members_login ON members(login_id);
-CREATE INDEX idx_users_login ON users(login_id);
-CREATE INDEX idx_pt_sessions_date ON pt_sessions(session_date);
-CREATE INDEX idx_exercise_records_session ON exercise_records(session_id);
+CREATE INDEX idx_members_login ON members(login_id);              -- 회원 로그인 ID 검색 최적화
+CREATE INDEX idx_users_login ON users(login_id);                 -- 사용자 로그인 ID 검색 최적화
+CREATE INDEX idx_pt_sessions_date ON pt_sessions(session_date);  -- PT 세션 날짜 검색 최적화
+CREATE INDEX idx_exercise_records_session ON exercise_records(session_id);  -- 세션별 운동 기록 검색 최적화
