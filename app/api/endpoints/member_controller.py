@@ -74,6 +74,12 @@ async def create_member(member: MemberCreate, current_user: dict = Depends(verif
         print(f"name: {member.name} (min_length=2)")
         print(f"gender: {member.gender}")
         print(f"contact: {member.contact}")
+        print(f"fitness_goal: {member.fitness_goal}")
+        print(f"experience_level: {member.experience_level}")
+        print(f"has_injury: {member.has_injury}")
+        print(f"injury_description: {member.injury_description}")
+        print(f"session_duration: {member.session_duration}")
+        print(f"preferred_exercises: {member.preferred_exercises}")
         print(f"total_pt_count: {member.total_pt_count}")
         print(f"remaining_pt_count: {member.remaining_pt_count}")
         print(f"notes: {member.notes}")
@@ -103,6 +109,12 @@ async def create_member(member: MemberCreate, current_user: dict = Depends(verif
             name=member.name,
             gender=member.gender,
             contact=member.contact,
+            fitness_goal=member.fitness_goal,
+            experience_level=member.experience_level,
+            has_injury=member.has_injury,
+            injury_description=member.injury_description,
+            session_duration=member.session_duration,
+            preferred_exercises=member.preferred_exercises,
             total_pt_count=member.total_pt_count,
             remaining_pt_count=member.remaining_pt_count,
             notes=member.notes,

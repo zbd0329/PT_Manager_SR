@@ -13,6 +13,11 @@ class Gender(PyEnum):
     MALE = "MALE"
     FEMALE = "FEMALE"
 
+class ExperienceLevel(PyEnum):
+    BEGINNER = "BEGINNER"
+    INTERMEDIATE = "INTERMEDIATE"
+    ADVANCED = "ADVANCED"
+
 class Member(Base):
     __tablename__ = "members"
 
@@ -21,8 +26,14 @@ class Member(Base):
     login_id = Column(String(50), unique=True, nullable=False)
     password = Column(String(255), nullable=False)
     name = Column(String(255), nullable=False)
-    gender = Column(Enum(Gender), nullable=True)
+    gender = Column(Enum(Gender), nullable=False)
     contact = Column(String(20), nullable=False)
+    fitness_goal = Column(String(100), nullable=False)
+    experience_level = Column(Enum(ExperienceLevel), nullable=False)
+    has_injury = Column(Boolean, default=False)
+    injury_description = Column(Text, nullable=True)
+    session_duration = Column(Integer, nullable=False)  # PT 세션 시간(분)
+    preferred_exercises = Column(Text, nullable=True)
     total_pt_count = Column(Integer, default=0)  # 총 PT 등록 횟수
     remaining_pt_count = Column(Integer, default=0)  # 남은 PT 횟수
     notes = Column(Text, nullable=True)
