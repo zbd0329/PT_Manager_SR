@@ -30,16 +30,12 @@
                                 <table class="table table-hover">
                                     <thead>
                                         <tr>
-                                            <th>회원번호</th>
                                             <th>이름</th>
                                             <th>로그인 ID</th>
                                             <th>성별</th>
                                             <th>연락처</th>
-                                            <th>운동 목표</th>
-                                            <th>운동 경험</th>
-                                            <th>PT 시간</th>
                                             <th>PT 횟수</th>
-                                            <th>부상 여부</th>
+                                            <th>특이사항</th>
                                             <th>작업</th>
                                         </tr>
                                     </thead>
@@ -60,88 +56,36 @@
                         <div id="registrationFormContainer" style="display: none;">
                             <h4 class="mb-4">새 회원 등록</h4>
                             <form id="memberRegistrationForm">
-                                <div class="row">
-                                    <div class="col-md-6 mb-3">
-                                        <label for="loginId" class="form-label">로그인 ID</label>
-                                        <input type="text" class="form-control" id="loginId" required minlength="4">
-                                    </div>
-                                    <div class="col-md-6 mb-3">
-                                        <label for="password" class="form-label">비밀번호</label>
-                                        <input type="password" class="form-control" id="password" required minlength="6">
-                                    </div>
-                                </div>
-                                <div class="row">
-                                    <div class="col-md-6 mb-3">
-                                        <label for="name" class="form-label">이름</label>
-                                        <input type="text" class="form-control" id="name" required minlength="2">
-                                    </div>
-                                    <div class="col-md-6 mb-3">
-                                        <label for="gender" class="form-label">성별</label>
-                                        <select class="form-select" id="gender" required>
-                                            <option value="MALE">남성</option>
-                                            <option value="FEMALE">여성</option>
-                                        </select>
-                                    </div>
-                                </div>
-                                <div class="row">
-                                    <div class="col-md-6 mb-3">
-                                        <label for="contact" class="form-label">연락처</label>
-                                        <input type="text" class="form-control" id="contact" required 
-                                               placeholder="예: 010-1234-5678">
-                                    </div>
-                                    <div class="col-md-6 mb-3">
-                                        <label for="fitness_goal" class="form-label">운동 목표</label>
-                                        <input type="text" class="form-control" id="fitness_goal" required
-                                               placeholder="예: 체중 감량, 근력 향상">
-                                    </div>
-                                </div>
-                                <div class="row">
-                                    <div class="col-md-6 mb-3">
-                                        <label for="experience_level" class="form-label">운동 경험 수준</label>
-                                        <select class="form-select" id="experience_level" required>
-                                            <option value="BEGINNER">초보자</option>
-                                            <option value="INTERMEDIATE">중급자</option>
-                                            <option value="ADVANCED">상급자</option>
-                                        </select>
-                                    </div>
-                                    <div class="col-md-6 mb-3">
-                                        <label for="session_duration" class="form-label">PT 세션 시간(분)</label>
-                                        <select class="form-select" id="session_duration" required>
-                                            <option value="30">30분</option>
-                                            <option value="60" selected>60분</option>
-                                            <option value="90">90분</option>
-                                            <option value="120">120분</option>
-                                            <option value="150">150분</option>
-                                            <option value="180">180분</option>
-                                        </select>
-                                    </div>
-                                </div>
-                                <div class="row">
-                                    <div class="col-md-6 mb-3">
-                                        <label for="total_pt_count" class="form-label">전체 PT 횟수</label>
-                                        <input type="number" class="form-control" id="total_pt_count" min="0" value="0" required>
-                                        <small class="form-text text-muted">등록 시 남은 PT 횟수는 전체 횟수와 동일하게 설정됩니다.</small>
-                                    </div>
-                                    <div class="col-md-6 mb-3">
-                                        <label for="preferred_exercises" class="form-label">선호하는 운동</label>
-                                        <input type="text" class="form-control" id="preferred_exercises" 
-                                               placeholder="예: 요가, 필라테스, 웨이트 트레이닝">
-                                    </div>
+                                <div class="mb-3">
+                                    <label for="loginId" class="form-label">로그인 ID</label>
+                                    <input type="text" class="form-control" id="loginId" required minlength="4">
                                 </div>
                                 <div class="mb-3">
-                                    <div class="form-check">
-                                        <input class="form-check-input" type="checkbox" id="has_injury">
-                                        <label class="form-check-label" for="has_injury">
-                                            부상 여부
-                                        </label>
-                                    </div>
-                                </div>
-                                <div class="mb-3" id="injury_description_container" style="display: none;">
-                                    <label for="injury_description" class="form-label">부상 내용 설명</label>
-                                    <textarea class="form-control" id="injury_description" rows="2"></textarea>
+                                    <label for="password" class="form-label">비밀번호</label>
+                                    <input type="password" class="form-control" id="password" required>
                                 </div>
                                 <div class="mb-3">
-                                    <label for="notes" class="form-label">메모</label>
+                                    <label for="name" class="form-label">이름</label>
+                                    <input type="text" class="form-control" id="name" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="gender" class="form-label">성별</label>
+                                    <select class="form-select" id="gender" required>
+                                        <option value="M">남성</option>
+                                        <option value="F">여성</option>
+                                    </select>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="contact" class="form-label">연락처</label>
+                                    <input type="text" class="form-control" id="contact" required 
+                                           placeholder="예: 010-1234-5678">
+                                </div>
+                                <div class="mb-3">
+                                    <label for="ptCount" class="form-label">PT 횟수</label>
+                                    <input type="number" class="form-control" id="ptCount" min="0" value="0">
+                                </div>
+                                <div class="mb-3">
+                                    <label for="notes" class="form-label">특이사항</label>
                                     <textarea class="form-control" id="notes" rows="3"></textarea>
                                 </div>
                                 <div class="d-flex justify-content-end gap-2">
@@ -164,80 +108,69 @@
         const itemsPerPage = 10;
         let totalMembers = 0;
 
-        // 공통 에러 처리 함수
-        async function handleAuthError(error) {
-            console.error('Authentication error:', error);
-            await Swal.fire({
-                icon: 'error',
-                title: '인증 오류',
-                text: error.message || '인증에 실패했습니다. 다시 로그인해주세요.',
-                confirmButtonText: '확인'
-            });
-            window.location.href = '/';
-        }
-
-        // API 요청 공통 처리 함수
-        async function fetchWithAuth(url, options = {}) {
-            try {
-                const response = await fetch(url, {
-                    ...options,
-                    credentials: 'include'
-                });
-
-                if (!response.ok) {
-                    const data = await response.json();
-                    if (response.status === 401 || response.status === 403 || data.detail?.includes('토큰')) {
-                        throw new Error(data.detail || '인증에 실패했습니다.');
-                    }
-                    throw new Error(data.detail || '요청 처리 중 오류가 발생했습니다.');
-                }
-
-                return response;
-            } catch (error) {
-                if (error.message.includes('토큰') || error.message.includes('인증')) {
-                    await handleAuthError(error);
-                }
-                throw error;
-            }
-        }
-
         // 페이지 로드 시 회원 목록 조회
         window.onload = async function() {
             try {
                 // 토큰 유효성 검증
-                const response = await fetchWithAuth('/api/member/verify-auth');
-                const data = await response.json();
+                const response = await fetch('/api/member/verify-auth', {
+                    credentials: 'include'  // 쿠키를 포함하여 요청
+                });
 
-                if (data.user_data.user_type !== 'TRAINER') {
-                    throw new Error('트레이너 권한이 필요합니다.');
+                if (!response.ok) {
+                    throw new Error('Token validation failed');
                 }
 
                 // 회원 목록 로드
                 loadMembers(0);
             } catch (error) {
-                await handleAuthError(error);
+                console.error('Token validation error:', error);
+                await Swal.fire({
+                    icon: 'error',
+                    title: '세션 만료',
+                    text: '로그인이 만료되었습니다. 다시 로그인해주세요.',
+                    confirmButtonText: '확인'
+                });
+                window.location.href = '/';
+                return;
             }
         };
 
         // 회원 목록 조회 함수
         async function loadMembers(skip) {
             try {
-                const response = await fetchWithAuth(`/api/v1/members?skip=${skip}&limit=${itemsPerPage}`);
-                const members = await response.json();
-                const totalCount = parseInt(response.headers.get('x-total-count') || '0');
-                totalMembers = totalCount;
-                displayMembers(members);
-                updatePagination(Math.ceil(totalCount / itemsPerPage));
+                const response = await fetch(`/api/v1/members?skip=${skip}&limit=${itemsPerPage}`, {
+                    credentials: 'include'  // 쿠키를 포함하여 요청
+                });
+
+                if (response.ok) {
+                    const members = await response.json();
+                    const totalCount = parseInt(response.headers.get('x-total-count') || '0');
+                    totalMembers = totalCount;  // 전체 회원 수 저장
+                    displayMembers(members);
+                    updatePagination(Math.ceil(totalCount / itemsPerPage));
+                } else {
+                    if (response.status === 401) {
+                        // 토큰이 만료된 경우
+                        await Swal.fire({
+                            icon: 'error',
+                            title: '세션 만료',
+                            text: '로그인이 만료되었습니다. 다시 로그인해주세요.',
+                            confirmButtonText: '확인'
+                        });
+                        window.location.href = '/';
+                        return;
+                    }
+                    const error = await response.json();
+                    throw new Error(error.detail || '회원 목록 조회 중 오류가 발생했습니다.');
+                }
             } catch (error) {
                 console.error('Error:', error);
-                if (!error.message.includes('토큰') && !error.message.includes('인증')) {
-                    await Swal.fire({
-                        icon: 'error',
-                        title: '조회 실패',
-                        text: error.message,
-                        confirmButtonText: '확인'
-                    });
-                }
+                await Swal.fire({
+                    icon: 'error',
+                    title: '조회 실패',
+                    text: error.message,
+                    confirmButtonText: '확인'
+                });
             }
         }
 
@@ -246,40 +179,23 @@
             const tbody = document.getElementById('memberTableBody');
             tbody.innerHTML = '';
 
-            const experienceLevelText = {
-                'BEGINNER': '초보자',
-                'INTERMEDIATE': '중급자',
-                'ADVANCED': '상급자'
-            };
-
             members.forEach(member => {
                 const row = document.createElement('tr');
                 row.innerHTML = `
-                    <td>${member.sequence_number}</td>
                     <td>${member.name}</td>
                     <td>${member.login_id}</td>
-                    <td>${member.gender === 'MALE' ? '남성' : '여성'}</td>
+                    <td>${member.gender === 'M' ? '남성' : '여성'}</td>
                     <td>${member.contact}</td>
-                    <td>${member.fitness_goal || '-'}</td>
-                    <td>${experienceLevelText[member.experience_level] || '-'}</td>
-                    <td>${member.session_duration}분</td>
-                    <td>${member.total_pt_count || 0} / ${member.remaining_pt_count || 0}</td>
-                    <td>${member.has_injury ? '<span class="text-danger">있음</span>' : '없음'}</td>
+                    <td>${member.pt_count}</td>
+                    <td>${member.notes || '-'}</td>
                     <td>
-                        <div class="btn-group">
-                            <button class="btn btn-sm btn-outline-primary view-member" data-member-id="${member.id}">
-                                상세
-                            </button>
-                            <button class="btn btn-sm btn-outline-secondary edit-member" data-member-id="${member.id}">
-                                수정
-                            </button>
-                        </div>
+                        <button class="btn btn-sm btn-outline-primary edit-member" data-member-id="${member.id}">
+                            수정
+                        </button>
                     </td>
                 `;
                 tbody.appendChild(row);
 
-                // 상세 보기 버튼에 이벤트 리스너 추가
-                row.querySelector('.view-member').addEventListener('click', () => viewMemberDetails(member.id));
                 // 수정 버튼에 이벤트 리스너 추가
                 row.querySelector('.edit-member').addEventListener('click', () => loadMemberForEdit(member.id));
             });
@@ -288,9 +204,28 @@
         // 회원 정보 수정을 위한 데이터 로드
         async function loadMemberForEdit(memberId) {
             try {
-                const response = await fetchWithAuth(`/api/v1/members/${memberId}`);
-                const member = await response.json();
-                showEditForm(member);
+                const response = await fetch(`/api/v1/members/${memberId}`, {
+                    credentials: 'include'  // 쿠키를 포함하여 요청
+                });
+
+                if (response.ok) {
+                    const member = await response.json();
+                    showEditForm(member);
+                } else {
+                    if (response.status === 401) {
+                        // 토큰이 만료된 경우
+                        await Swal.fire({
+                            icon: 'error',
+                            title: '세션 만료',
+                            text: '로그인이 만료되었습니다. 다시 로그인해주세요.',
+                            confirmButtonText: '확인'
+                        });
+                        window.location.href = '/';
+                        return;
+                    }
+                    const error = await response.json();
+                    throw new Error(error.detail || '회원 정보 조회 중 오류가 발생했습니다.');
+                }
             } catch (error) {
                 console.error('Error:', error);
                 await Swal.fire({
@@ -318,7 +253,7 @@
             editForm.querySelector('#name').value = member.name;
             editForm.querySelector('#gender').value = member.gender;
             editForm.querySelector('#contact').value = member.contact;
-            editForm.querySelector('#total_pt_count').value = member.total_pt_count || 0;
+            editForm.querySelector('#ptCount').value = member.pt_count;
             editForm.querySelector('#notes').value = member.notes || '';
             
             // 로그인 ID 필드를 읽기 전용으로 변경
@@ -354,13 +289,11 @@
         async function handleEditSubmit(e, memberId) {
             e.preventDefault();
 
-            const ptCount = parseInt(document.getElementById('total_pt_count').value);
             const memberData = {
                 name: document.getElementById('name').value,
                 gender: document.getElementById('gender').value,
                 contact: document.getElementById('contact').value,
-                total_pt_count: ptCount,
-                remaining_pt_count: ptCount,  // 수정 시에도 총 횟수와 남은 횟수를 동일하게 설정
+                pt_count: parseInt(document.getElementById('ptCount').value),
                 notes: document.getElementById('notes').value || null
             };
 
@@ -371,12 +304,13 @@
             }
 
             try {
-                const response = await fetchWithAuth(`/api/v1/members/${memberId}`, {
+                const response = await fetch(`/api/v1/members/${memberId}`, {
                     method: 'PUT',
                     headers: {
                         'Content-Type': 'application/json',
                         'Accept': 'application/json'
                     },
+                    credentials: 'include',  // 쿠키를 포함하여 요청
                     body: JSON.stringify(memberData)
                 });
 
@@ -472,101 +406,58 @@
                 form.onsubmit = async (e) => {
                     e.preventDefault();
 
-                    const ptCount = parseInt(form.querySelector('#total_pt_count').value);
                     const memberData = {
                         login_id: form.querySelector('#loginId').value,
                         password: form.querySelector('#password').value,
                         name: form.querySelector('#name').value,
                         gender: form.querySelector('#gender').value,
                         contact: form.querySelector('#contact').value,
-                        fitness_goal: form.querySelector('#fitness_goal').value,
-                        experience_level: form.querySelector('#experience_level').value,
-                        session_duration: parseInt(form.querySelector('#session_duration').value),
-                        total_pt_count: ptCount,
-                        remaining_pt_count: ptCount,  // 자동으로 전체 횟수와 동일하게 설정
-                        has_injury: form.querySelector('#has_injury').checked,
-                        injury_description: form.querySelector('#has_injury').checked ? 
-                            form.querySelector('#injury_description').value : null,
-                        preferred_exercises: form.querySelector('#preferred_exercises').value || null,
+                        pt_count: parseInt(form.querySelector('#ptCount').value),
                         notes: form.querySelector('#notes').value || null
                     };
 
-                    // 요청 데이터 로깅
-                    console.log('=== 회원 등록 요청 데이터 ===');
-                    console.log('login_id:', memberData.login_id);
-                    console.log('password:', '*'.repeat(memberData.password.length));
-                    console.log('name:', memberData.name);
-                    console.log('gender:', memberData.gender);
-                    console.log('contact:', memberData.contact);
-                    console.log('fitness_goal:', memberData.fitness_goal);
-                    console.log('experience_level:', memberData.experience_level);
-                    console.log('has_injury:', memberData.has_injury);
-                    console.log('injury_description:', memberData.injury_description);
-                    console.log('session_duration:', memberData.session_duration);
-                    console.log('preferred_exercises:', memberData.preferred_exercises);
-                    console.log('total_pt_count:', memberData.total_pt_count);
-                    console.log('remaining_pt_count:', memberData.remaining_pt_count);
-                    console.log('notes:', memberData.notes);
-                    console.log('========================');
-
                     try {
-                        const response = await fetchWithAuth('/api/v1/members', {
+                        const response = await fetch('/api/v1/members', {
                             method: 'POST',
                             headers: {
-                                'Content-Type': 'application/json'
+                                'Content-Type': 'application/json',
+                                'Accept': 'application/json'
                             },
+                            credentials: 'include',  // 쿠키를 포함하여 요청
                             body: JSON.stringify(memberData)
                         });
 
-                        // 응답 상태 및 데이터 로깅
+                        // 응답 데이터를 먼저 확인
                         console.log('서버 응답 상태:', response.status);
-                        const responseText = await response.text();
-                        console.log('서버 응답 원본:', responseText);
-                        
-                        let responseData;
-                        try {
-                            responseData = responseText ? JSON.parse(responseText) : {};
-                            console.log('서버 응답 데이터:', responseData);
-                        } catch (e) {
-                            console.error('JSON 파싱 실패:', e);
-                            responseData = { detail: responseText };
-                        }
+                        const responseData = await response.json();
+                        console.log('서버 응답 데이터:', responseData);
 
-                        if (!response.ok) {
-                            throw new Error(responseData.detail || '회원 등록에 실패했습니다.');
-                        }
-
-                        // 성공적으로 등록된 경우에만 실행
                         if (response.ok) {
                             await Swal.fire({
                                 icon: 'success',
-                                title: '회원 등록 성공',
-                                text: '새로운 회원이 등록되었습니다.',
+                                title: '회원 등록 성공!',
+                                text: '회원이 성공적으로 등록되었습니다.',
                                 confirmButtonText: '확인'
                             });
                             resetForm();
                             loadMembers((currentPage - 1) * itemsPerPage);
                         } else {
-                            throw new Error('회원 등록에 실패했습니다.');
+                            const error = await response.json();
+                            await Swal.fire({
+                                icon: 'error',
+                                title: '회원 등록 실패',
+                                text: error.detail || '회원 등록 중 오류가 발생했습니다.',
+                                confirmButtonText: '확인'
+                            });
                         }
                     } catch (error) {
-                        console.error('Error details:', error);
-                        let errorMessage = error.message || '회원 등록 중 오류가 발생했습니다.';
-                        
-                        // 중복 ID 에러 메시지를 더 친숙하게 표시
-                        if (errorMessage.includes('이미 등록된 회원 ID')) {
-                            errorMessage = '이미 사용 중인 회원 ID입니다. 다른 ID를 사용해주세요.';
-                        }
-                        
+                        console.error('Error:', error);
                         await Swal.fire({
                             icon: 'error',
-                            title: '회원 등록 실패',
-                            text: errorMessage,
+                            title: '서버 오류',
+                            text: '서버와의 통신 중 오류가 발생했습니다.',
                             confirmButtonText: '확인'
                         });
-                        
-                        // 폼을 초기화하지 않고 유지
-                        return;
                     }
                 };
             }
@@ -694,59 +585,6 @@
             document.getElementById('memberList').style.display = 'none';
             document.getElementById('showRegistrationForm').style.display = 'none';
         });
-
-        // 부상 여부 체크박스 이벤트 리스너
-        document.getElementById('has_injury').addEventListener('change', function(e) {
-            const injuryDescContainer = document.getElementById('injury_description_container');
-            injuryDescContainer.style.display = e.target.checked ? 'block' : 'none';
-            if (!e.target.checked) {
-                document.getElementById('injury_description').value = '';
-            }
-        });
-
-        // 회원 상세 정보 조회
-        async function viewMemberDetails(memberId) {
-            try {
-                const response = await fetchWithAuth(`/api/v1/members/${memberId}`);
-                const member = await response.json();
-                
-                const experienceLevelText = {
-                    'BEGINNER': '초보자',
-                    'INTERMEDIATE': '중급자',
-                    'ADVANCED': '상급자'
-                };
-
-                await Swal.fire({
-                    title: `${member.name} 회원 상세 정보`,
-                    html: `
-                        <div class="text-start">
-                            <p><strong>회원번호:</strong> ${member.sequence_number}</p>
-                            <p><strong>로그인 ID:</strong> ${member.login_id}</p>
-                            <p><strong>성별:</strong> ${member.gender === 'MALE' ? '남성' : '여성'}</p>
-                            <p><strong>연락처:</strong> ${member.contact}</p>
-                            <p><strong>운동 목표:</strong> ${member.fitness_goal}</p>
-                            <p><strong>운동 경험:</strong> ${experienceLevelText[member.experience_level]}</p>
-                            <p><strong>PT 세션 시간:</strong> ${member.session_duration}분</p>
-                            <p><strong>PT 횟수:</strong> ${member.total_pt_count} / ${member.remaining_pt_count}</p>
-                            <p><strong>선호 운동:</strong> ${member.preferred_exercises || '-'}</p>
-                            <p><strong>부상 여부:</strong> ${member.has_injury ? '있음' : '없음'}</p>
-                            ${member.has_injury ? `<p><strong>부상 내용:</strong> ${member.injury_description || '-'}</p>` : ''}
-                            <p><strong>메모:</strong> ${member.notes || '-'}</p>
-                        </div>
-                    `,
-                    width: '600px',
-                    confirmButtonText: '확인'
-                });
-            } catch (error) {
-                console.error('Error:', error);
-                await Swal.fire({
-                    icon: 'error',
-                    title: '조회 실패',
-                    text: error.message,
-                    confirmButtonText: '확인'
-                });
-            }
-        }
     </script>
 </body>
 </html>

@@ -13,7 +13,7 @@ class UserCreate(BaseModel):
     login_id: str
     email: Optional[EmailStr] = None
     name: str
-    birth_date: str
+    birth_date: date
     password: str
     user_type: UserType = UserType.MEMBER
 

@@ -3,6 +3,7 @@ from sqlalchemy.orm import Session
 from app.core.database import get_db
 from app.schemas.member_schema import MemberCreate, MemberResponse, MemberUpdate, MemberLogin
 from app.models.member_model import Member
+from app.models.pt_session import PTSession
 from app.core.security import get_current_user_from_cookie, create_access_token, verify_trainer
 from passlib.context import CryptContext
 from app.models.user_model import UserType
@@ -10,6 +11,7 @@ from app.models.users_members import UserMember
 import logging
 from typing import List
 from sqlalchemy.sql import func
+from app.models.exercise_record import ExerciseRecord
 
 router = APIRouter(
     prefix="/api/v1/members",
@@ -26,13 +28,25 @@ async def get_members(
     db: Session = Depends(get_db),
     current_user: dict = Depends(verify_trainer)
 ):
-    """
-    트레이너의 회원 목록을 조회합니다.
-    """
+    """트레이너의 회원 목록을 조회합니다."""
     try:
         # 현재 트레이너와 연결된 회원들만 조회 (sequence_number로 정렬)
-        members = db.query(Member)\
-            .join(UserMember, UserMember.member_id == Member.id)\
+        members = db.query(
+            Member.id,
+            Member.sequence_number,
+            Member.name,
+            Member.login_id,
+            Member.gender,
+            Member.contact,
+            Member.fitness_goal,
+            Member.experience_level,
+            Member.session_duration,
+            Member.total_pt_count,
+            Member.remaining_pt_count,
+            Member.has_injury,
+            Member.created_at,
+            Member.is_active
+        ).join(UserMember, UserMember.member_id == Member.id)\
             .filter(UserMember.trainer_id == current_user["sub"])\
             .order_by(Member.sequence_number)\
             .offset(skip)\
@@ -57,10 +71,12 @@ async def get_members(
         )
 
 @router.post("/", response_model=MemberResponse)
-async def create_member(member: MemberCreate, current_user: dict = Depends(verify_trainer), db: Session = Depends(get_db)):
-    """
-    새로운 회원을 생성하고 현재 트레이너와 연결합니다.
-    """
+async def create_member(
+    member: MemberCreate,
+    current_user: dict = Depends(verify_trainer),
+    db: Session = Depends(get_db)
+):
+    """새로운 회원을 생성하고 현재 트레이너와 연결합니다."""
     try:
         # 요청 데이터 로깅
         print("\n=== Member Creation Debug ===")
@@ -150,15 +166,13 @@ async def create_member(member: MemberCreate, current_user: dict = Depends(verif
             detail=str(e)
         )
 
-@router.get("/{member_id}", response_model=MemberResponse)
-async def get_member(
+@router.get("/{member_id}")
+async def get_member_info(
     member_id: str,
-    current_user: dict = Depends(verify_trainer),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: dict = Depends(verify_trainer)
 ):
-    """
-    특정 회원의 정보를 조회합니다.
-    """
+    """회원 정보를 조회합니다."""
     try:
         # 현재 트레이너의 회원인지 확인
         member = db.query(Member)\
@@ -174,9 +188,51 @@ async def get_member(
                 detail="회원을 찾을 수 없습니다."
             )
         
-        return member
-    except HTTPException:
-        raise
+        # 회원의 운동 기록 조회
+        exercise_records = db.query(
+            ExerciseRecord.exercise_name,
+            ExerciseRecord.duration,
+            ExerciseRecord.repetitions,
+            ExerciseRecord.sets,
+            ExerciseRecord.body_part
+        ).join(
+            PTSession, PTSession.id == ExerciseRecord.session_id
+        ).filter(
+            ExerciseRecord.member_id == member_id
+        ).order_by(
+            PTSession.session_date.desc(),
+            ExerciseRecord.created_at.desc()
+        ).limit(10).all()  # 최근 10개의 운동 기록만 가져옴
+        
+        # 운동 기록을 딕셔너리 리스트로 변환
+        exercise_history = [
+            {
+                "exercise_name": record.exercise_name,
+                "duration": record.duration,
+                "repetitions": record.repetitions,
+                "sets": record.sets,
+                "body_part": record.body_part
+            }
+            for record in exercise_records
+        ]
+        
+        return {
+            "id": member.id,
+            "name": member.name,
+            "gender": member.gender.value,
+            "contact": member.contact,
+            "fitness_goal": member.fitness_goal,
+            "experience_level": member.experience_level.value,
+            "has_injury": member.has_injury,
+            "injury_description": member.injury_description,
+            "session_duration": member.session_duration,
+            "preferred_exercises": member.preferred_exercises,
+            "total_pt_count": member.total_pt_count,
+            "remaining_pt_count": member.remaining_pt_count,
+            "notes": member.notes,
+            "exercise_history": exercise_history  # 운동 기록 추가
+        }
+            
     except Exception as e:
         logging.error(f"회원 조회 중 오류 발생: {str(e)}")
         raise HTTPException(
@@ -191,9 +247,7 @@ async def update_member(
     current_user: dict = Depends(verify_trainer),
     db: Session = Depends(get_db)
 ):
-    """
-    회원 정보를 수정합니다.
-    """
+    """회원 정보를 수정합니다."""
     try:
         # 현재 트레이너의 회원인지 확인
         member = db.query(Member)\
@@ -236,21 +290,7 @@ async def update_member(
 
 @router.post("/login")
 async def member_login(member_data: MemberLogin, response: Response, db: Session = Depends(get_db)):
-    """
-    회원 로그인을 처리합니다.
-    
-    Args:
-        member_data: 로그인 정보
-        response: FastAPI Response 객체
-        db: 데이터베이스 세션
-        
-    Returns:
-        access_token과 회원 정보
-        
-    Raises:
-        401: 잘못된 인증 정보
-        403: 비활성화된 회원
-    """
+    """회원 로그인을 처리합니다."""
     print(f"회원 로그인 시도 - ID: {member_data.login_id}")
     
     try:

@@ -104,13 +104,9 @@ class MemberResponse(BaseModel):
                 "fitness_goal": "체중 감량",
                 "experience_level": "BEGINNER",
                 "has_injury": False,
-                "injury_description": None,
                 "session_duration": 60,
-                "preferred_exercises": "요가, 필라테스",
                 "total_pt_count": 10,
                 "remaining_pt_count": 10,
-                "notes": "특이사항 없음",
-                "sequence_number": 1,
                 "is_active": True,
                 "created_at": "2024-02-08T12:00:00"
             }

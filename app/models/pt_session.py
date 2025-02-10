@@ -22,4 +22,5 @@ class PTSession(Base):
     # 관계 설정
     member = relationship("Member", back_populates="pt_sessions")
     trainer = relationship("User", back_populates="pt_sessions")
-    exercise_records = relationship("ExerciseRecord", back_populates="session", cascade="all, delete-orphan") 
+    exercise_records = relationship("ExerciseRecord", back_populates="session", cascade="all, delete-orphan")
+    recommended_workouts = relationship("RecommendedWorkout", back_populates="session", cascade="all, delete-orphan") 

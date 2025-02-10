@@ -1,0 +1,29 @@
+[개발1 시작]
+api : POST /api/v1/members/ 
+api 명세서 :
+{
+    "login_id": str,        # 로그인 ID (최소 4자)
+    "password": str,        # 비밀번호 (최소 6자)
+    "name": str,           # 회원 이름 (최소 2자)
+    "gender": str,         # 성별 ("MALE" 또는 "FEMALE")
+    "contact": str,        # 연락처
+    "fitness_goal": str,   # 운동 목표 (예: "체중 감량", "근력 향상")
+    "experience_level": str,  # 운동 경험 수준 ("BEGINNER", "INTERMEDIATE", "ADVANCED")
+    "has_injury": bool,    # 부상 여부 (true/false)
+    "injury_description": str,  # 부상 내용 설명 (선택사항)
+    "session_duration": int,  # PT 세션 시간(분) (30분 단위, 30-180분)
+    "preferred_exercises": str,  # 선호하는 운동 (선택사항)
+    "total_pt_count": int, # 전체 PT 횟수
+    "remaining_pt_count": int, # 남은 PT 횟수
+    "notes": str          # 메모 (선택사항)
+}
+
+[요구사항]
+1. api 명세서에 맞춰서 api 수정하고 싶어
+2. db 테이블을 마이그레이션 하고싶어. 
+3. curl로 직접 신호를 보내서 디비에 저장이 되는지 확인하고싶어.  
+2. 테스트에서 이상이 없으면 화면단 html을 수정하고 싶어. 
+
+- 코드를 작성하거나 수정할때 어떤 문제가 있었는지 먼저 설명해줘. 그 후에 어떻게 , 왜 수정했는지 설명하고 코드를 작성해줘. 
+
+[개발1 끝]

@@ -1,6 +1,6 @@
-from sqlalchemy import Column, String, Integer, Text, Boolean, DateTime, Enum, ForeignKey
+from sqlalchemy import Column, String, Integer, Text, Boolean, DateTime, Enum, ForeignKey, Float
 from sqlalchemy.orm import relationship
-from app.models.base import Base
+from app.models import Base
 from passlib.context import CryptContext
 from enum import Enum as PyEnum
 import uuid
@@ -44,8 +44,9 @@ class Member(Base):
     # 관계 설정
     trainers = relationship("User", secondary="users_members", back_populates="members", overlaps="user_members,trainer")
     pt_sessions = relationship("PTSession", back_populates="member", cascade="all, delete-orphan")
-    user_members = relationship("UserMember", back_populates="member", overlaps="trainers")
+    user_members = relationship("UserMember", back_populates="member", overlaps="trainers,members")
     exercise_records = relationship("ExerciseRecord", back_populates="member", cascade="all, delete-orphan")
+    recommended_workouts = relationship("RecommendedWorkout", back_populates="member", cascade="all, delete-orphan")
 
     def set_password(self, password: str):
         """ 비밀번호를 해싱하여 저장 """

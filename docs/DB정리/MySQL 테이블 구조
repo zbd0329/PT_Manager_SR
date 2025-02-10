@@ -60,6 +60,7 @@ CREATE TABLE exercise_records (
     exercise_name VARCHAR(100) NOT NULL,       
     duration INT NOT NULL,                     
     repetitions INT NOT NULL,                  
+    sets INT NOT NULL DEFAULT 1,               -- 세트 수 추가
     body_part TEXT NOT NULL,                   
     input_source ENUM('MEMBER', 'TRAINER') NOT NULL DEFAULT 'MEMBER',  
     member_id CHAR(36) NOT NULL,               
@@ -70,6 +71,36 @@ CREATE TABLE exercise_records (
     FOREIGN KEY (member_id) REFERENCES members(id) ON DELETE CASCADE,  
     FOREIGN KEY (trainer_id) REFERENCES users(id) ON DELETE SET NULL,
     FOREIGN KEY (session_id) REFERENCES pt_sessions(id) ON DELETE CASCADE
+);
+
+-- 추천 운동 프로그램 테이블
+CREATE TABLE recommended_workouts (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    member_id CHAR(36) NOT NULL,
+    session_id CHAR(36) NOT NULL,
+    workout_name VARCHAR(100) NOT NULL,
+    total_duration INT NOT NULL,  -- 분 단위
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (member_id) REFERENCES members(id) ON DELETE CASCADE,
+    FOREIGN KEY (session_id) REFERENCES pt_sessions(id) ON DELETE CASCADE,
+    INDEX idx_member_id (member_id),
+    INDEX idx_session_id (session_id)
+);
+
+-- 추천 운동 상세 테이블
+CREATE TABLE recommended_exercises (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    workout_id INT NOT NULL,
+    exercise_name VARCHAR(100) NOT NULL,
+    sets INT NOT NULL,
+    repetitions INT NOT NULL,
+    duration INT NOT NULL,  -- 초 단위
+    rest_time INT NOT NULL,  -- 초 단위
+    description TEXT,
+    sequence INT NOT NULL,  -- 운동 순서
+    FOREIGN KEY (workout_id) REFERENCES recommended_workouts(id) ON DELETE CASCADE,
+    INDEX idx_workout_id (workout_id)
 );
 
 -- 인덱스 추가

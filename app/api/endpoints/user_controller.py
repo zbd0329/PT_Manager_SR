@@ -8,6 +8,7 @@ from typing import List
 import logging
 from app.repositories.user_repository import UserRepository
 from app.schemas.user_schema import UserType
+from fastapi.encoders import jsonable_encoder
 
 router = APIRouter(
     prefix="/api/v1/users",
@@ -48,7 +49,8 @@ async def create_user(user: UserCreate, db: Session = Depends(get_db)):
                 )
         
         print(f"Creating user with data: {user.dict()}")  # 디버그 로그
-        return await UserService.create_user(user, db)
+        created_user = await UserService.create_user(user, db)
+        return jsonable_encoder(created_user)
     except Exception as e:
         print(f"Error creating user: {str(e)}")  # 디버그 로그
         raise

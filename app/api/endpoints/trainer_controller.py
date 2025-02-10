@@ -47,4 +47,15 @@ async def exercise_records_page(
         "user_name": current_user.get("name", "Unknown"),
         "user_type": current_user.get("user_type", "Unknown"),
         "member": member
+    })
+
+@router.get("/exercise-recommendation", response_class=HTMLResponse)
+async def exercise_recommendation_page(request: Request, current_user: dict = Depends(verify_trainer)):
+    """
+    트레이너의 추천운동관리 페이지를 반환합니다.
+    """
+    return templates.TemplateResponse("trainer/exercise_recommendation.html", {
+        "request": request,
+        "user_name": current_user.get("name", "Unknown"),
+        "user_type": current_user.get("user_type", "Unknown")
     }) 
