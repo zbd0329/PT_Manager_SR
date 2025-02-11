@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PT Manager - 회원신체계측</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="/static/css/style.css" rel="stylesheet">
+    <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
+</head>
+<body class="bg-light">
+    <div class="container mt-5">
+        <div class="row">
+            <div class="col-12">
+                <div class="card shadow">
+                    <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                        <h3 class="mb-0">회원신체계측</h3>
+                        <div>
+                            <span class="me-3" id="userName"></span>
+                            <a href="/trainer/dashboard" class="btn btn-outline-primary me-2">대시보드</a>
+                            <button onclick="handleLogout()" class="btn btn-outline-danger">로그아웃</button>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <form id="measurementForm" class="needs-validation" novalidate>
+                            <div class="mb-4">
+                                <label for="memberSelect" class="form-label">회원 선택</label>
+                                <select class="form-select" id="memberSelect" required>
+                                    <option value="">회원을 선택하세요</option>
+                                </select>
+                                <div class="mt-2">
+                                    <span class="text-muted">성별: </span>
+                                    <span id="memberGender" class="fw-bold">-</span>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-4 mb-3">
+                                    <label for="height" class="form-label">키 (cm)</label>
+                                    <input type="number" class="form-control" id="height" step="0.1" required>
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label for="weight" class="form-label">몸무게 (kg)</label>
+                                    <input type="number" class="form-control" id="weight" step="0.1" required>
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label for="bodyFat" class="form-label">체지방량 (kg)</label>
+                                    <input type="number" class="form-control" id="bodyFat" step="0.1" required>
+                                    <div class="form-text text-muted">체지방률은 자동으로 계산됩니다.</div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-4 mb-3">
+                                    <label for="muscleMass" class="form-label">골격근량 (kg)</label>
+                                    <input type="number" class="form-control" id="muscleMass" step="0.1" required>
+                                    <div class="form-text text-muted">실제 측정된 골격근량을 입력하세요.</div>
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label for="measurementDate" class="form-label">측정일</label>
+                                    <input type="date" class="form-control" id="measurementDate" required>
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label class="form-label">BMI</label>
+                                    <div class="form-control-plaintext" id="bmiDisplay">-</div>
+                                </div>
+                            </div>
+                            <div class="d-grid gap-2">
+                                <button type="submit" class="btn btn-primary">저장</button>
+                            </div>
+                        </form>
+
+                        <!-- 측정 기록 테이블 -->
+                        <div class="mt-5">
+                            <h4>측정 기록</h4>
+                            <div class="table-responsive">
+                                <table class="table table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th>측정일</th>
+                                            <th>키 (cm)</th>
+                                            <th>몸무게 (kg)</th>
+                                            <th>체지방량 (kg)</th>
+                                            <th>체지방률 (%)</th>
+                                            <th>골격근량 (kg)</th>
+                                            <th>BMI</th>
+                                            <th>관리</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="measurementRecords">
+                                        <!-- 자바스크립트로 데이터가 여기에 추가됩니다 -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        // 페이지 로드 시 실행
+        window.onload = async function() {
+            await loadUserInfo();
+            await loadMembers();
+            setupBMICalculation();
+            setDefaultDate();
+        };
+
+        // 사용자 정보 로드
+        async function loadUserInfo() {
+            try {
+                const response = await fetch('/api/member/verify-auth', {
+                    credentials: 'include'
+                });
+
+                if (!response.ok) {
+                    throw new Error('Authentication failed');
+                }
+
+                const data = await response.json();
+                if (data.user_data.user_type !== 'TRAINER') {
+                    throw new Error('Unauthorized access');
+                }
+
+                const userName = localStorage.getItem('user_name');
+                if (userName) {
+                    document.getElementById('userName').textContent = `${userName} 트레이너님`;
+                }
+            } catch (error) {
+                console.error('Authentication error:', error);
+                await Swal.fire({
+                    icon: 'error',
+                    title: '인증 오류',
+                    text: '로그인이 필요합니다.',
+                    confirmButtonText: '확인'
+                });
+                window.location.href = '/';
+            }
+        }
+
+        // 회원 목록 로드
+        async function loadMembers() {
+            try {
+                const response = await fetch('/api/v1/members', {
+                    credentials: 'include'
+                });
+                const members = await response.json();
+                
+                const memberSelect = document.getElementById('memberSelect');
+                members.forEach(member => {
+                    const option = document.createElement('option');
+                    option.value = member.id;
+                    option.textContent = member.name;
+                    option.dataset.gender = member.gender;  // 성별 정보 저장
+                    memberSelect.appendChild(option);
+                });
+
+                // 회원 선택 시 해당 회원의 측정 기록 로드 및 성별 표시
+                memberSelect.addEventListener('change', function() {
+                    const selectedOption = this.options[this.selectedIndex];
+                    const gender = selectedOption.dataset.gender;
+                    const genderText = gender === 'MALE' ? '남성' : gender === 'FEMALE' ? '여성' : '-';
+                    document.getElementById('memberGender').textContent = genderText;
+                    loadMeasurementRecords();
+                });
+            } catch (error) {
+                console.error('Failed to load members:', error);
+                Swal.fire({
+                    icon: 'error',
+                    title: '오류',
+                    text: '회원 목록을 불러오는데 실패했습니다.',
+                });
+            }
+        }
+
+        // BMI 계산 설정
+        function setupBMICalculation() {
+            const heightInput = document.getElementById('height');
+            const weightInput = document.getElementById('weight');
+            const bodyFatInput = document.getElementById('bodyFat');
+            const bmiDisplay = document.getElementById('bmiDisplay');
+
+            function calculateBMI() {
+                const height = heightInput.value;
+                const weight = weightInput.value;
+                
+                if (height && weight) {
+                    const heightInMeters = height / 100;
+                    const bmi = (weight / (heightInMeters * heightInMeters)).toFixed(1);
+                    bmiDisplay.textContent = bmi;
+                } else {
+                    bmiDisplay.textContent = '-';
+                }
+            }
+
+            heightInput.addEventListener('input', calculateBMI);
+            weightInput.addEventListener('input', calculateBMI);
+        }
+
+        // 현재 날짜를 기본값으로 설정
+        function setDefaultDate() {
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('measurementDate').value = today;
+        }
+
+        // 로그아웃 처리
+        async function handleLogout() {
+            try {
+                localStorage.removeItem('user_name');
+                localStorage.removeItem('user_type');
+                document.cookie = 'access_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+                window.location.href = '/';
+            } catch (error) {
+                console.error('Logout error:', error);
+                await Swal.fire({
+                    icon: 'error',
+                    title: '로그아웃 실패',
+                    text: '로그아웃 처리 중 오류가 발생했습니다.',
+                    confirmButtonText: '확인'
+                });
+            }
+        }
+
+        // 폼 제출 처리
+        document.getElementById('measurementForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const formData = {
+                member_id: document.getElementById('memberSelect').value,
+                height: parseFloat(document.getElementById('height').value),
+                weight: parseFloat(document.getElementById('weight').value),
+                body_fat: parseFloat(document.getElementById('bodyFat').value),
+                muscle_mass: parseFloat(document.getElementById('muscleMass').value),
+                measurement_date: document.getElementById('measurementDate').value
+            };
+
+            try {
+                const response = await fetch('/api/v1/measurements', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(formData),
+                    credentials: 'include'
+                });
+
+                if (response.ok) {
+                    await Swal.fire({
+                        icon: 'success',
+                        title: '성공',
+                        text: '신체 계측 정보가 저장되었습니다.',
+                        confirmButtonText: '확인'
+                    });
+                    this.reset();
+                    setDefaultDate();
+                    document.getElementById('bmiDisplay').textContent = '-';
+                    await loadMeasurementRecords();
+                } else {
+                    throw new Error('Failed to save measurement data');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                await Swal.fire({
+                    icon: 'error',
+                    title: '오류',
+                    text: '신체 계측 정보 저장에 실패했습니다.',
+                    confirmButtonText: '확인'
+                });
+            }
+        });
+
+        // 측정 기록 로드
+        async function loadMeasurementRecords() {
+            const memberId = document.getElementById('memberSelect').value;
+            if (!memberId) return;
+
+            try {
+                const response = await fetch(`/api/v1/measurements/${memberId}`, {
+                    credentials: 'include'
+                });
+                
+                if (!response.ok) {
+                    if (response.status === 404) {
+                        const tbody = document.getElementById('measurementRecords');
+                        tbody.innerHTML = `
+                            <tr>
+                                <td colspan="7" class="text-center">
+                                    입력된 측정 데이터가 없습니다. 새로운 기록을 입력해주세요.
+                                </td>
+                            </tr>
+                        `;
+                        return;
+                    }
+                    throw new Error('Failed to load measurement records');
+                }
+
+                const records = await response.json();
+                const tbody = document.getElementById('measurementRecords');
+                tbody.innerHTML = '';
+                
+                if (!records || records.length === 0) {
+                    tbody.innerHTML = `
+                        <tr>
+                            <td colspan="7" class="text-center">
+                                입력된 측정 데이터가 없습니다. 새로운 기록을 입력해주세요.
+                            </td>
+                        </tr>
+                    `;
+                    return;
+                }
+                
+                records.forEach(record => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${new Date(record.measurement_date).toLocaleDateString()}</td>
+                        <td>${record.height}</td>
+                        <td>${record.weight}</td>
+                        <td>${record.body_fat}</td>
+                        <td>${record.body_fat_percentage}</td>
+                        <td>${record.muscle_mass}</td>
+                        <td>${record.bmi}</td>
+                        <td>
+                            <button class="btn btn-sm btn-outline-danger" onclick="deleteMeasurement(${record.id})">삭제</button>
+                        </td>
+                    `;
+                    tbody.appendChild(row);
+                });
+            } catch (error) {
+                console.error('Failed to load measurement records:', error);
+                const tbody = document.getElementById('measurementRecords');
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="7" class="text-center text-danger">
+                            측정 기록을 불러오는데 실패했습니다.
+                        </td>
+                    </tr>
+                `;
+            }
+        }
+
+        // 측정 기록 삭제
+        async function deleteMeasurement(measurementId) {
+            const result = await Swal.fire({
+                title: '삭제 확인',
+                text: '이 측정 기록을 삭제하시겠습니까?',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: '삭제',
+                cancelButtonText: '취소'
+            });
+
+            if (result.isConfirmed) {
+                try {
+                    const response = await fetch(`/api/v1/measurements/${measurementId}`, {
+                        method: 'DELETE',
+                        credentials: 'include'
+                    });
+
+                    if (response.ok) {
+                        await Swal.fire({
+                            icon: 'success',
+                            title: '삭제 완료',
+                            text: '측정 기록이 삭제되었습니다.',
+                        });
+                        await loadMeasurementRecords();
+                    } else {
+                        throw new Error('Failed to delete measurement');
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                    await Swal.fire({
+                        icon: 'error',
+                        title: '오류',
+                        text: '측정 기록 삭제에 실패했습니다.',
+                    });
+                }
+            }
+        }
+    </script>
+</body>
+</html>

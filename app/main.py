@@ -12,6 +12,7 @@ from app.api.endpoints.trainer_controller import router as trainer_router
 from app.api.endpoints.pt_session_controller import router as pt_session_router
 from app.api.endpoints.recommended_workout_controller import router as recommended_workout_router
 from app.api.endpoints.exercise_records_controller import router as exercise_records_router
+from app.api.endpoints.body_measurement_controller import router as body_measurement_router
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from pathlib import Path
@@ -37,7 +38,8 @@ app.include_router(member_router)
 app.include_router(trainer_router)
 app.include_router(pt_session_router)
 app.include_router(recommended_workout_router)
-app.include_router(exercise_records_router)  # 운동 기록 라우터 추가
+app.include_router(exercise_records_router)
+app.include_router(body_measurement_router)  # 체중 측정 라우터 추가
 
 # 정적 파일 설정 (상대 경로 사용)
 app.mount("/static", StaticFiles(directory="app/static"), name="static")

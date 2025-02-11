@@ -1,20 +1,23 @@
 from logging.config import fileConfig
 import os
+import sys
 from dotenv import load_dotenv
 from sqlalchemy import engine_from_config
 from sqlalchemy import pool
 from alembic import context
 
-# Load environment variables
+# 프로젝트 루트 디렉토리를 Python 경로에 추가
+sys.path.append(os.path.dirname(os.path.dirname(__file__)))
+
+# 환경 변수 로드
 load_dotenv()
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
 config = context.config
 
-# Set database URL from environment variables
-config.set_main_option('sqlalchemy.url', 
-    f"mysql+pymysql://{os.getenv('MYSQL_USER')}:{os.getenv('MYSQL_PASSWORD')}@{os.getenv('MYSQL_HOST')}/{os.getenv('MYSQL_DATABASE')}")
+# DB URL 설정
+config.set_main_option("sqlalchemy.url", os.getenv("DATABASE_URL"))
 
 # Interpret the config file for Python logging.
 # This line sets up loggers basically.
@@ -23,7 +26,9 @@ if config.config_file_name is not None:
 
 # add your model's MetaData object here
 # for 'autogenerate' support
-from app.models import Base
+from app.models.base import Base
+from app.models.body_measurement_model import BodyMeasurement
+from app.models.member_model import Member
 target_metadata = Base.metadata
 
 # other values from the config, defined by the needs of env.py,

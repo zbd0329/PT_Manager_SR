@@ -47,6 +47,7 @@ class Member(Base):
     user_members = relationship("UserMember", back_populates="member", overlaps="trainers,members")
     exercise_records = relationship("ExerciseRecord", back_populates="member", cascade="all, delete-orphan")
     recommended_workouts = relationship("RecommendedWorkout", back_populates="member", cascade="all, delete-orphan")
+    body_measurements = relationship("BodyMeasurement", back_populates="member", cascade="all, delete-orphan")
 
     def set_password(self, password: str):
         """ 비밀번호를 해싱하여 저장 """

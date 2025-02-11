@@ -103,6 +103,22 @@ CREATE TABLE recommended_exercises (
     INDEX idx_workout_id (workout_id)
 );
 
+-- 신체 계측 기록 테이블
+CREATE TABLE body_measurements (
+    id CHAR(36) PRIMARY KEY DEFAULT (UUID()),
+    member_id CHAR(36) NOT NULL,
+    height FLOAT NOT NULL,  -- 키 (cm)
+    weight FLOAT NOT NULL,  -- 몸무게 (kg)
+    body_fat FLOAT NOT NULL,  -- 체지방량 (kg)
+    body_fat_percentage FLOAT NOT NULL,  -- 체지방률 (%)
+    muscle_mass FLOAT NOT NULL,  -- 골격근량 (kg)
+    bmi FLOAT NOT NULL,  -- BMI
+    measurement_date DATE NOT NULL,  -- 측정일
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (member_id) REFERENCES members(id) ON DELETE CASCADE,
+    INDEX idx_member_measurements (member_id, measurement_date)
+);
+
 -- 인덱스 추가
 CREATE INDEX idx_members_login ON members(login_id);
 CREATE INDEX idx_users_login ON users(login_id);
