@@ -11,6 +11,7 @@ import json
 from app.models.recommended_workout import RecommendedWorkout, RecommendedExercise
 from app.models.pt_session import PTSession
 from datetime import datetime
+import os
 
 router = APIRouter(prefix="/api/v1/recommended-workouts", tags=["recommended-workouts"])
 
@@ -50,15 +51,20 @@ async def generate_workout(
         print(f"Request body: {request.dict()}")
         
         print("\n2. OpenAI 설정 확인:")
-        print(f"API Key 존재 여부: {bool(settings.OPENAI_API_KEY)}")
-        print(f"API Key 앞부분: {settings.OPENAI_API_KEY[:10]}..." if settings.OPENAI_API_KEY else "API 키 없음")
+        api_key = os.getenv("OPENAI_API_KEY")
+        print(f"API Key 존재 여부: {bool(api_key)}")
+        print(f"API Key 길이: {len(api_key) if api_key else 0}")
+        print(f"API Key 앞부분: {api_key[:10]}..." if api_key else "API 키 없음")
         print(f"Model: {settings.OPENAI_MODEL}")
+        
+        if not api_key:
+            raise ValueError("OpenAI API 키가 설정되지 않았습니다.")
         
         # LangChain ChatOpenAI 객체 생성
         llm = ChatOpenAI(
             temperature=settings.OPENAI_TEMPERATURE,
             model_name=settings.OPENAI_MODEL,
-            openai_api_key=settings.OPENAI_API_KEY,
+            openai_api_key=api_key,
             streaming=False
         )
         print("✅ ChatOpenAI 모델 초기화 성공")
