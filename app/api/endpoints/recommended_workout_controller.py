@@ -65,6 +65,7 @@ async def generate_workout(
             temperature=settings.OPENAI_TEMPERATURE,
             model_name=settings.OPENAI_MODEL,
             openai_api_key=api_key,
+            openai_api_base=os.getenv("OPENAI_API_BASE"),
             streaming=False
         )
         print("✅ ChatOpenAI 모델 초기화 성공")
