@@ -10,6 +10,7 @@ from pydantic import BaseModel
 import json
 from app.models.recommended_workout import RecommendedWorkout, RecommendedExercise
 from app.models.pt_session import PTSession
+from app.models.body_measurement_model import BodyMeasurement
 from datetime import datetime
 import os
 
@@ -28,6 +29,7 @@ class WorkoutPlan(BaseModel):
     exercises: List[Exercise]
 
 class GenerateWorkoutRequest(BaseModel):
+    member_id: str
     member_name: str
     gender: str
     fitness_goal: str
@@ -42,6 +44,7 @@ class GenerateWorkoutRequest(BaseModel):
 @router.post("/generate")
 async def generate_workout(
     request: GenerateWorkoutRequest,
+    db: Session = Depends(get_db),
     current_user: dict = Depends(verify_trainer)
 ):
     """OpenAI API를 사용하여 회원에게 맞는 운동을 추천합니다."""
@@ -49,6 +52,24 @@ async def generate_workout(
         print("\n=== LangChain OpenAI 요청 디버그 시작 ===")
         print("1. 요청 데이터 확인:")
         print(f"Request body: {request.dict()}")
+        
+        # 회원의 최신 신체 계측 정보 조회
+        latest_measurement = db.query(BodyMeasurement)\
+            .filter(BodyMeasurement.member_id == request.member_id)\
+            .order_by(BodyMeasurement.measurement_date.desc())\
+            .first()
+            
+        # 신체 계측 정보 문자열 생성
+        body_measurement_str = ""
+        if latest_measurement:
+            body_measurement_str = f"""
+- 신체 계측 정보 (최근 측정일: {latest_measurement.measurement_date}):
+  * 키: {latest_measurement.height}cm
+  * 몸무게: {latest_measurement.weight}kg
+  * BMI: {latest_measurement.bmi}
+  * 체지방량: {latest_measurement.body_fat}kg
+  * 체지방률: {latest_measurement.body_fat_percentage}%
+  * 골격근량: {latest_measurement.muscle_mass}kg"""
         
         print("\n2. OpenAI 설정 확인:")
         api_key = os.getenv("OPENAI_API_KEY")
@@ -89,10 +110,11 @@ async def generate_workout(
 - 운동 수준: {request.exercise_level}
 - 선호하는 운동: {', '.join(request.preferred_exercises) if request.preferred_exercises else '없음'}
 - 남은 PT 횟수: {request.remaining_sessions}회
-- 부상 이력: {', '.join(request.injuries) if request.injuries else '없음'}
+- 부상 이력: {', '.join(request.injuries) if request.injuries else '없음'}{body_measurement_str}
 {exercise_history_str}
 
-위 회원의 정보와 운동 기록을 참고하여, 적합한 운동 프로그램을 추천해주세요.
+위 회원의 정보와 신체 계측 정보, 운동 기록을 참고하여, 적합한 운동 프로그램을 추천해주세요.
+특히 BMI, 체지방률, 골격근량을 고려하여 운동 강도와 종류를 조절해주세요.
 이전 운동 기록을 분석하여 운동 강도와 난이도를 조절하고, 부위별 균형을 고려해주세요.
 pt시간에 맞춰서 운동계획을 짜주세요. 
 준비운동과 마무리운동은 5분식 넣고 자세한 운동을 적어주세요. (준비운동과 마무리운동은 운동 시간에 포함되지 않습니다.)
