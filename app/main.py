@@ -2,11 +2,11 @@ from app.models import Base as AppBase  # 모든 모델이 정의된 파일
 import sys
 import os
 
-from fastapi import FastAPI, Request, HTTPException, Depends
-from app.core.database import engine, Base
+from fastapi import FastAPI, Request, HTTPException, Depends, status
+from app.core.database import engine
 # from mangum import Mangum #Vercel 배포 하기위한 임포트
 from sqlalchemy import text
-from app.api.endpoints import user_router
+from app.api.endpoints.user_controller import router as user_router
 from app.api.endpoints.member_controller import router as member_router
 from app.api.endpoints.trainer_controller import router as trainer_router
 from app.api.endpoints.pt_session_controller import router as pt_session_router
@@ -18,7 +18,6 @@ from pathlib import Path
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from app.core.config import settings
 from app.core.security import verify_token, verify_trainer, verify_member
-from fastapi import status
 
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
