@@ -35,7 +35,12 @@
                                 </div>
                                 <div class="mb-4">
                                     <label for="birthDate" class="form-label">생년월일</label>
-                                    <input type="date" class="form-control" id="birthDate" required>
+                                    <input type="date" class="form-control" id="birthDate" max="" required>
+                                    <script>
+                                        // 오늘 날짜를 최대값으로 설정
+                                        const today = new Date().toISOString().split('T')[0];
+                                        document.getElementById('birthDate').max = today;
+                                    </script>
                                 </div>
                                 <div class="mb-4">
                                     <label for="userPassword" class="form-label">비밀번호</label>
@@ -44,8 +49,8 @@
                                 <div class="mb-4">
                                     <label for="userType" class="form-label">사용자 유형</label>
                                     <select class="form-select" id="userType" required>
-                                        <option value="MEMBER">회원</option>
-                                        <option value="TRAINER">트레이너</option>
+                                        <option value="member">회원</option>
+                                        <option value="trainer">트레이너</option>
                                     </select>
                                 </div>
                                 <div class="d-grid gap-3">

@@ -562,17 +562,28 @@
 
                 // OpenAI API 요청 데이터 구성
                 const requestData = {
-                    member_name: memberData.name,
-                    gender: memberData.gender,
-                    fitness_goal: memberData.fitness_goal,
-                    pt_duration: memberData.session_duration,
-                    preferred_exercises: memberData.preferred_exercises,
-                    remaining_sessions: memberData.remaining_pt_count,
-                    injuries: memberData.injuries,
-                    exercise_level: memberData.experience_level,
-                    session_id: sessionId,
-                    exercise_history: exerciseData.exercises || []  // 선택한 세션의 운동 기록
+                    member_id: String(memberId),
+                    member_name: String(memberData.name),
+                    gender: String(memberData.gender || 'M'),
+                    fitness_goal: String(memberData.fitness_goal || '체력 향상'),
+                    pt_duration: Number(memberData.session_duration || 60),
+                    preferred_exercises: typeof memberData.preferred_exercises === 'string' 
+                        ? [memberData.preferred_exercises] 
+                        : (Array.isArray(memberData.preferred_exercises) ? memberData.preferred_exercises : []),
+                    remaining_sessions: Number(memberData.remaining_pt_count || 0),
+                    injuries: memberData.has_injury ? ['있음'] : [],
+                    session_id: String(sessionId),
+                    exercise_history: Array.isArray(exerciseData.exercises) ? exerciseData.exercises.map(exercise => ({
+                        exercise_name: String(exercise.exercise_name),
+                        duration: Number(exercise.duration),
+                        repetitions: Number(exercise.repetitions),
+                        sets: Number(exercise.sets),
+                        body_part: String(exercise.body_part)
+                    })) : [],
+                    exercise_level: String(memberData.experience_level || 'BEGINNER')
                 };
+
+                console.log('AI 추천운동 요청 데이터:', requestData);  // 디버깅용 로그
 
                 // 로딩 표시
                 Swal.fire({
